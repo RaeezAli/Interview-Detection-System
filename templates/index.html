@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎯 Interview Detection System</h1>
+    </header>
+
+    <!-- Video Feed -->
+    <div class="video-section">
+        <img src="{{ url_for('video_feed') }}" alt="Live Feed" id="videoFeed" width="640" height="480">
+        <button id="cameraToggleBtn">Turn Camera ON/OFF</button>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+        <h2>📊 Live Metrics</h2>
+        <p>Emotion: <span id="emotion">Loading...</span> (<span id="confidence">0%</span>)</p>
+        <p>Blinks: <span id="blinkCount">0</span></p>
+    </div>
+
+    <!-- End Interview -->
+    <button id="endInterviewBtn">🏁 End Interview & View Summary</button>
+
+    <!-- Summary -->
+    <div id="summarySection" style="display:none;">
+        <h2>📋 Interview Summary</h2>
+        <p>Duration: <span id="summaryDuration">0m 0s</span></p>
+        <p>Dominant Emotion: <span id="summaryEmotion">-</span></p>
+        <p>Total Blinks: <span id="summaryBlinks">0</span></p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

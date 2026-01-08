@@ -1,2 +1,4 @@
 @echo off
-"%~dp0\interview_ai_env\Scripts\python.exe" "%~dp0\src\main.py"
+call interview_ai_env\Scripts\activate.bat
+python app.py
+pause

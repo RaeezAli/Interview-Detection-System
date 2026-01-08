@@ -1,15 +1,16 @@
 import csv
-import time
+import os
+from datetime import datetime
 
 class Logger:
-    def __init__(self, filename="interview_log.csv"):
+    def __init__(self, filename='session_log.csv'):
         self.filename = filename
-        with open(self.filename, mode="w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Timestamp", "Emotion", "Gaze", "Score", "Blink Rate", "Yaw"])
+        if not os.path.exists(self.filename):
+            with open(self.filename, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['timestamp', 'emotion', 'confidence', 'gaze', 'score', 'blink_count', 'yaw', 'pitch', 'roll'])
 
-    def log(self, emotion, gaze, score, blink_rate=None, yaw=None):
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        with open(self.filename, mode="a", newline="") as f:
+    def log(self, emotion, gaze, score, blink_count, yaw=0, pitch=0, roll=0, confidence=0.0):
+        with open(self.filename, 'a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow([timestamp, emotion, gaze, score, blink_rate, yaw])
+            writer.writerow([datetime.now(), emotion, confidence, gaze, score, blink_count, yaw, pitch, roll])

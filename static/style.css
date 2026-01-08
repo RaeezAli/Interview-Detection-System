@@ -1,0 +1,110 @@
+/* ---------------- BASIC RESET ---------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    width: 720px;
+}
+
+/* ---------------- HEADER ---------------- */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 28px;
+    color: #1e90ff;
+}
+
+/* ---------------- VIDEO SECTION ---------------- */
+.video-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#videoFeed {
+    border: 2px solid #1e90ff;
+    border-radius: 8px;
+}
+
+#cameraToggleBtn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 16px;
+    background-color: #1e90ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cameraToggleBtn:hover {
+    background-color: #0077cc;
+}
+
+/* ---------------- METRICS ---------------- */
+.metrics {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.metrics h2 {
+    margin-bottom: 10px;
+    color: #1e90ff;
+}
+
+.metrics p {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+/* ---------------- END BUTTON ---------------- */
+#endInterviewBtn {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#endInterviewBtn:hover {
+    background-color: #218838;
+}
+
+/* ---------------- SUMMARY ---------------- */
+#summarySection {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+#summarySection h2 {
+    color: #1e90ff;
+    margin-bottom: 10px;
+}
+
+#summarySection p {
+    font-size: 16px;
+    margin-bottom: 6px;
+}
