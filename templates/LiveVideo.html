@@ -472,103 +472,175 @@
       </div>
     </div>
 
+    <!-- Hidden canvas for frame extraction -->
+    <canvas id="capture-canvas" style="display: none"></canvas>
+
     <script>
       const video = document.getElementById("webcam");
+      const canvas = document.getElementById("capture-canvas");
+      const ctx = canvas.getContext("2d");
       const startBtn = document.getElementById("start-btn");
       const endBtn = document.getElementById("end-btn");
       const timerDisplay = document.getElementById("timer");
       const liveBadge = document.getElementById("live-badge");
       const overlay = document.getElementById("overlay");
 
-      let socket = io();
+      const socket = io({ transports: ["websocket", "polling"] });
+
       let stream = null;
       let startTime = null;
       let timerInterval = null;
+      let frameInterval = null;
+      let isRecording = false;
+      let liveSessionId = null;
 
-      // Initialize Socket.IO connection
-      socket.on("connect", () => {
-        console.log("Connected to server");
+      // Running score averages for confidence bar
+      let scoreHistory = { gaze: [], emotion: [], posture: [] };
+
+      // ─── Socket Events ─────────────────────────────────────────────
+      socket.on("connect", () => console.log("[Live] Socket connected"));
+
+      socket.on("live_started", (data) => {
+        liveSessionId = data.session_id;
+        console.log("[Live] Session:", liveSessionId);
+        startFrameSending();
       });
 
-      socket.on("status", (data) => {
-        console.log("Backend status:", data.message);
+      socket.on("live_stats", (data) => {
+        updateStatCards(data);
       });
 
-      // Handle Start Interview
+      socket.on("analysis_complete", (data) => {
+        clearInterval(frameInterval);
+        window.location.href = "/loading";
+      });
+
+      socket.on("analysis_error", (data) => {
+        console.error("[Live] Error:", data.error);
+        document.getElementById("tip-text").textContent = "⚠️ " + data.error;
+      });
+
+      // ─── Start Interview ────────────────────────────────────────────
       startBtn.addEventListener("click", async () => {
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: true,
+            audio: false,
           });
           video.srcObject = stream;
+          await new Promise((r) => (video.onloadedmetadata = r));
+
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 480;
 
           startBtn.disabled = true;
           endBtn.disabled = false;
           liveBadge.style.display = "flex";
+          isRecording = true;
 
-          // Start Timer
           startTime = Date.now();
           timerInterval = setInterval(updateTimer, 1000);
 
-          // Emit event to backend
           socket.emit("start_live_analysis", { timestamp: startTime });
-
           document.getElementById("tip-text").textContent =
             "Maintain a steady gaze at the camera and speak clearly.";
         } catch (err) {
-          console.error("Error accessing webcam:", err);
           alert("Could not access webcam. Please check permissions.");
         }
       });
 
-      // Handle End Interview
-      endBtn.addEventListener("click", () => {
-        // Stop webcam
-        if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
-        }
-
-        // Stop Timer
-        clearInterval(timerInterval);
-
-        // Show Overlay
-        overlay.style.display = "flex";
-
-        // Emit stop event
-        socket.emit("stop_live_analysis");
-
-        // Redirect after delay
-        setTimeout(() => {
-          window.location.href = "{{ url_for('loading') }}";
-        }, 2000);
-      });
-
-      function updateTimer() {
-        const elapsed = Date.now() - startTime;
-        const totalSeconds = Math.floor(elapsed / 1000);
-
-        const hours = Math.floor(totalSeconds / 3600)
-          .toString()
-          .padStart(2, "0");
-        const minutes = Math.floor((totalSeconds % 3600) / 60)
-          .toString()
-          .padStart(2, "0");
-        const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-
-        timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+      // ─── Frame Sending ──────────────────────────────────────────────
+      function startFrameSending() {
+        frameInterval = setInterval(() => {
+          if (!isRecording || !stream) return;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const b64 = canvas.toDataURL("image/jpeg", 0.7);
+          socket.emit("live_frame", { frame: b64 });
+        }, 100); // 10 fps to server
       }
 
-      // --- Stats Update logic (Placeholders) ---
-      // This will be connected to actual backend events later
-      function updateStats(data) {
-        // Mapping incoming data to DOM elements
-        if (data.gaze) {
-          document.getElementById("stat-gaze").textContent = data.gaze.status;
-          document.getElementById("dot-gaze").className =
-            `indicator-dot ${data.gaze.color}`;
-        }
-        // etc...
+      // ─── End Interview ──────────────────────────────────────────────
+      endBtn.addEventListener("click", () => {
+        isRecording = false;
+        clearInterval(frameInterval);
+        clearInterval(timerInterval);
+
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+
+        overlay.style.display = "flex";
+        socket.emit("stop_live_analysis");
+      });
+
+      // ─── Stat Card Updater ──────────────────────────────────────────
+      function updateStatCards(data) {
+        const g = data.gaze || {};
+        const e = data.emotion || {};
+        const p = data.posture || {};
+
+        // Eye Contact
+        const gazeEl = document.getElementById("stat-gaze");
+        const dotGaze = document.getElementById("dot-gaze");
+        const eyeOk = g.eye_contact;
+        gazeEl.textContent = g.gaze_direction || "—";
+        dotGaze.className = "indicator-dot " + (eyeOk ? "green" : "red");
+
+        // Expression
+        document.getElementById("stat-emotion").textContent =
+          e.interview_label || e.dominant_emotion || "—";
+
+        // Posture
+        document.getElementById("stat-posture").textContent =
+          p.posture_label || "—";
+
+        // Confidence bar (rolling average of all three scores)
+        const gs = g.score || 0;
+        const es = e.score || 0;
+        const ps = p.score || 0;
+        scoreHistory.gaze.push(gs);
+        scoreHistory.emotion.push(es);
+        scoreHistory.posture.push(ps);
+        const avgScore = Math.round(
+          (avg(scoreHistory.gaze) +
+            avg(scoreHistory.emotion) +
+            avg(scoreHistory.posture)) /
+            3,
+        );
+        document.getElementById("score-text").textContent = avgScore + "%";
+        document.getElementById("score-fill").style.width = avgScore + "%";
+
+        // Dynamic tip based on lowest category
+        updateTip(gs, es, ps);
+      }
+
+      function avg(arr) {
+        if (!arr.length) return 0;
+        const tail = arr.slice(-20); // rolling window of 20 frames
+        return tail.reduce((a, b) => a + b, 0) / tail.length;
+      }
+
+      const TIPS = {
+        gaze: "👁 Look directly at the camera lens, not the screen.",
+        emotion: "😊 Relax your expression — try a gentle, confident smile.",
+        posture:
+          "🧍 Sit straight, shoulders back, and center yourself in frame.",
+      };
+
+      function updateTip(gs, es, ps) {
+        const min = Math.min(gs, es, ps);
+        let tip = "";
+        if (min === gs) tip = TIPS.gaze;
+        else if (min === es) tip = TIPS.emotion;
+        else tip = TIPS.posture;
+        document.getElementById("tip-text").textContent = tip;
+      }
+
+      // ─── Timer ─────────────────────────────────────────────────────
+      function updateTimer() {
+        const t = Math.floor((Date.now() - startTime) / 1000);
+        const h = String(Math.floor(t / 3600)).padStart(2, "0");
+        const m = String(Math.floor((t % 3600) / 60)).padStart(2, "0");
+        const s = String(t % 60).padStart(2, "0");
+        timerDisplay.textContent = `${h}:${m}:${s}`;
       }
     </script>
   </body>

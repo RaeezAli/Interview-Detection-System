@@ -4,19 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Analyzing Interview | InterviewAI</title>
-
-    <!-- Google Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- Font Awesome -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
       :root {
         --bg-color: #0a0a0a;
@@ -31,13 +27,11 @@
         );
         --success-green: #10b981;
       }
-
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
         font-family: "Inter", sans-serif;
         background-color: var(--bg-color);
@@ -48,7 +42,6 @@
         align-items: center;
         overflow: hidden;
       }
-
       .loading-container {
         width: 100%;
         max-width: 500px;
@@ -56,7 +49,6 @@
         padding: 2rem;
         animation: fadeIn 1s ease-out;
       }
-
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -67,7 +59,6 @@
           transform: translateY(0);
         }
       }
-
       .logo {
         font-size: 1.2rem;
         font-weight: 700;
@@ -78,15 +69,12 @@
         letter-spacing: 1px;
         opacity: 0.8;
       }
-
-      /* Spinner */
       .ai-icon-wrapper {
         position: relative;
         width: 100px;
         height: 100px;
         margin: 0 auto 2rem;
       }
-
       .pulsing-brain {
         font-size: 4rem;
         background: var(--gradient);
@@ -94,9 +82,9 @@
         -webkit-text-fill-color: transparent;
         animation: pulse 2s infinite ease-in-out;
       }
-
       @keyframes pulse {
-        0% {
+        0%,
+        100% {
           transform: scale(1);
           opacity: 0.8;
           filter: drop-shadow(0 0 0px var(--accent-blue));
@@ -106,13 +94,7 @@
           opacity: 1;
           filter: drop-shadow(0 0 20px var(--accent-blue));
         }
-        100% {
-          transform: scale(1);
-          opacity: 0.8;
-          filter: drop-shadow(0 0 0px var(--accent-blue));
-        }
       }
-
       .loader-ring {
         position: absolute;
         top: -10px;
@@ -124,32 +106,26 @@
         border-radius: 50%;
         animation: spin 1.5s linear infinite;
       }
-
       @keyframes spin {
         to {
           transform: rotate(360deg);
         }
       }
-
       h2 {
         font-size: 1.8rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
       }
-
       p.subtitle {
         color: var(--text-dim);
         margin-bottom: 3rem;
         font-weight: 300;
       }
-
-      /* Steps List */
       .steps-list {
         text-align: left;
         margin-bottom: 3rem;
         padding-left: 1rem;
       }
-
       .step {
         display: flex;
         align-items: center;
@@ -159,46 +135,37 @@
         transition: all 0.5s ease;
         font-size: 0.95rem;
       }
-
       .step.active {
         opacity: 1;
         color: var(--text-main);
       }
-
       .step.completed {
         opacity: 0.7;
         color: var(--success-green);
       }
-
       .step-icon {
         width: 20px;
         display: flex;
         justify-content: center;
       }
-
       .step i.fa-check {
         display: none;
       }
-
       .step.completed i.fa-check {
         display: inline-block;
       }
-
-      .step.active i.fa-circle-notch {
-        display: inline-block;
-        animation: spin 1s linear infinite;
-      }
-
+      .step.active i.fa-circle-notch,
       .step i.fa-circle-notch {
         display: none;
       }
-
-      /* Progress Bar */
+      .step.active i.fa-circle-notch {
+        display: inline-block !important;
+        animation: spin 1s linear infinite;
+      }
       .progress-wrapper {
         width: 100%;
         margin-bottom: 1rem;
       }
-
       .progress-bar {
         width: 100%;
         height: 6px;
@@ -207,27 +174,22 @@
         overflow: hidden;
         margin-bottom: 0.5rem;
       }
-
       .progress-fill {
         width: 0%;
         height: 100%;
         background: var(--gradient);
         transition: width 0.5s cubic-bezier(0.1, 0.7, 1, 0.1);
       }
-
       .progress-text {
         font-size: 0.85rem;
         color: var(--text-dim);
         font-weight: 600;
       }
-
       .note {
         font-size: 0.8rem;
         color: rgba(255, 255, 255, 0.3);
         margin-top: 2rem;
       }
-
-      /* Success State */
       .success-checkmark {
         display: none;
         color: var(--success-green);
@@ -235,7 +197,6 @@
         margin-bottom: 2rem;
         animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
-
       @keyframes popIn {
         0% {
           transform: scale(0);
@@ -246,19 +207,41 @@
           opacity: 1;
         }
       }
+      .error-box {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        display: none;
+      }
+      .error-box h3 {
+        color: #ef4444;
+        margin-bottom: 0.5rem;
+      }
+      .error-box a {
+        color: var(--accent-blue);
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 1rem;
+      }
+      #live-step-label {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        margin-top: 0.5rem;
+        min-height: 1.2rem;
+      }
     </style>
   </head>
   <body>
     <div class="loading-container">
       <div class="logo">InterviewAI</div>
 
-      <!-- Animation Zone -->
       <div id="loading-view">
         <div class="ai-icon-wrapper">
           <div class="loader-ring"></div>
           <i class="fas fa-brain pulsing-brain"></i>
         </div>
-
         <h2 id="status-title">Analyzing Your Interview...</h2>
         <p class="subtitle">
           Please wait while our AI processes your performance
@@ -266,14 +249,11 @@
       </div>
 
       <div id="success-view" style="display: none">
-        <div class="success-checkmark">
-          <i class="fas fa-check-circle"></i>
-        </div>
+        <div class="success-checkmark"><i class="fas fa-check-circle"></i></div>
         <h2>Analysis Complete!</h2>
         <p class="subtitle">Redirecting to your detailed report...</p>
       </div>
 
-      <!-- Steps List -->
       <div class="steps-list" id="steps-list">
         <div class="step" id="step-1">
           <div class="step-icon">
@@ -325,7 +305,6 @@
         </div>
       </div>
 
-      <!-- Progress Bar -->
       <div class="progress-wrapper">
         <div class="progress-bar">
           <div class="progress-fill" id="progress-fill"></div>
@@ -333,15 +312,29 @@
         <div class="progress-text">
           <span id="percent-text">0</span>% Complete
         </div>
+        <div id="live-step-label"></div>
       </div>
 
       <div class="note">
-        This may take a few seconds to a minute depending on video length
+        This may take a few seconds to a minute depending on video length.
+      </div>
+
+      <div class="error-box" id="error-box">
+        <h3><i class="fas fa-exclamation-triangle"></i> Analysis Error</h3>
+        <p id="error-message">An unexpected error occurred.</p>
+        <a href="/"><i class="fas fa-arrow-left"></i> Go Back to Home</a>
       </div>
     </div>
 
     <script>
-      const steps = [
+      const progressFill = document.getElementById("progress-fill");
+      const percentText = document.getElementById("percent-text");
+      const loadingView = document.getElementById("loading-view");
+      const successView = document.getElementById("success-view");
+      const stepsList = document.getElementById("steps-list");
+      const stepLabel = document.getElementById("live-step-label");
+      const errorBox = document.getElementById("error-box");
+      const stepIds = [
         "step-1",
         "step-2",
         "step-3",
@@ -351,69 +344,101 @@
         "step-7",
         "step-8",
       ];
+      let cssCurrentStep = 0;
+      let socketConnected = false;
 
-      const progressFill = document.getElementById("progress-fill");
-      const percentText = document.getElementById("percent-text");
-      const loadingView = document.getElementById("loading-view");
-      const successView = document.getElementById("success-view");
-      const stepsList = document.getElementById("steps-list");
+      // ─── Socket.IO Real-time Progress ───────────────────────────────
+      const socket = io({ transports: ["websocket", "polling"] });
 
-      let currentStep = 0;
+      socket.on("connect", () => {
+        socketConnected = true;
+        console.log("[Loading] Socket connected — real-time mode active");
+      });
 
-      function processSteps() {
-        if (currentStep < steps.length) {
-          const stepId = steps[currentStep];
-          const prevStepId = currentStep > 0 ? steps[currentStep - 1] : null;
+      socket.on("analysis_progress", (data) => {
+        const pct = Math.round(data.progress);
+        progressFill.style.width = pct + "%";
+        percentText.textContent = pct;
+        stepLabel.textContent = data.current_step || "";
+        // Advance CSS step indicator based on progress buckets
+        const stepIndex = Math.min(Math.floor(pct / 12.5), stepIds.length - 1);
+        activateCSSStep(stepIndex);
+      });
 
-          // Mark previous as completed
-          if (prevStepId) {
-            const prevEl = document.getElementById(prevStepId);
-            prevEl.classList.remove("active");
-            prevEl.classList.add("completed");
+      socket.on("analysis_complete", (data) => {
+        progressFill.style.width = "100%";
+        percentText.textContent = "100";
+        markAllComplete();
+        setTimeout(() => showSuccess(data.redirect || "/report"), 500);
+      });
+
+      socket.on("analysis_error", (data) => {
+        document.getElementById("error-message").textContent =
+          data.error || "An error occurred.";
+        errorBox.style.display = "block";
+      });
+
+      // ─── CSS Step Helpers ────────────────────────────────────────────
+      function activateCSSStep(index) {
+        if (index <= cssCurrentStep) return;
+        for (let i = cssCurrentStep; i < index; i++) {
+          const el = document.getElementById(stepIds[i]);
+          if (el) {
+            el.classList.remove("active");
+            el.classList.add("completed");
           }
-
-          // Mark current as active
-          const currentEl = document.getElementById(stepId);
-          currentEl.classList.add("active");
-
-          // Update Progress
-          const progress = Math.round(((currentStep + 1) / steps.length) * 100);
-          progressFill.style.width = progress + "%";
-          percentText.textContent = progress;
-
-          currentStep++;
-
-          // Random delay between 1.5 and 2 seconds for natural feel
-          const delay = 1500 + Math.random() * 500;
-          setTimeout(processSteps, delay);
-        } else {
-          // Finalize last step
-          const lastEl = document.getElementById(steps[steps.length - 1]);
-          lastEl.classList.remove("active");
-          lastEl.classList.add("completed");
-
-          finishLoading();
         }
+        const current = document.getElementById(stepIds[index]);
+        if (current) current.classList.add("active");
+        cssCurrentStep = index;
       }
 
-      function finishLoading() {
+      function markAllComplete() {
+        stepIds.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.classList.remove("active");
+            el.classList.add("completed");
+          }
+        });
+      }
+
+      function showSuccess(redirectUrl) {
+        loadingView.style.display = "none";
+        stepsList.style.display = "none";
+        successView.style.display = "block";
+        document.querySelector(".success-checkmark").style.display = "block";
+        setTimeout(() => (window.location.href = redirectUrl), 1500);
+      }
+
+      // ─── Polling fallback (if socket does not connect in time) ───────
+      function pollForReport() {
+        fetch("/get_report_data")
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.ready) showSuccess(data.redirect);
+            else if (!socketConnected) setTimeout(pollForReport, 3000);
+          })
+          .catch(() => setTimeout(pollForReport, 5000));
+      }
+
+      // ─── Session Check on Load ────────────────────────────────────────
+      window.addEventListener("load", () => {
+        fetch("/check_session")
+          .then((r) => r.json())
+          .then((d) => {
+            if (!d.active) window.location.href = "/";
+          });
+
+        // Start CSS animation fallback immediately
         setTimeout(() => {
-          loadingView.style.display = "none";
-          stepsList.style.display = "none";
-          successView.style.display = "block";
-          document.querySelector(".success-checkmark").style.display = "block";
-
-          // Final redirect
-          setTimeout(() => {
-            window.location.href = "/report";
-          }, 1500);
-        }, 800);
-      }
-
-      // Start the simulation after a short initial delay
-      window.onload = () => {
-        setTimeout(processSteps, 1000);
-      };
+          if (!socketConnected) activateCSSStep(0);
+        }, 1000);
+        // Polling fallback starts after 5s if socket never connects
+        setTimeout(() => {
+          if (!socketConnected) pollForReport();
+        }, 5000);
+      });
     </script>
   </body>
 </html>
