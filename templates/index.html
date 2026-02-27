@@ -1,42 +1,276 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interview Detection System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<div class="container">
-    <header>
-        <h1>🎯 Interview Detection System</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InterviewAI | Master Your Performance</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --card-bg: #161616;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --text-main: #ffffff;
+        --text-dim: #a1a1aa;
+        --gradient: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Navbar */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 5%;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .tagline {
+        font-size: 0.9rem;
+        color: var(--text-dim);
+        font-weight: 300;
+      }
+
+      /* Hero Section */
+      .hero {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0 5%;
+        margin-top: 2rem;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        margin-bottom: 1rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        color: var(--text-dim);
+        max-width: 700px;
+        margin-bottom: 3rem;
+      }
+
+      /* Cards Section */
+      .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        width: 100%;
+        max-width: 1000px;
+      }
+
+      .action-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-decoration: none;
+        color: white;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .action-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent-blue);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .action-card i {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .action-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .action-card p {
+        font-size: 0.95rem;
+        color: var(--text-dim);
+        margin-bottom: 0;
+      }
+
+      /* Features Section */
+      .features {
+        padding: 8rem 5%;
+        background: #0d0d0d;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .feature-item {
+        text-align: center;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 15px;
+        transition: 0.3s;
+      }
+
+      .feature-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .feature-item i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--accent-blue);
+      }
+
+      .feature-item span {
+        display: block;
+        font-weight: 500;
+        color: var(--text-dim);
+      }
+
+      /* Footer */
+      footer {
+        padding: 3rem 5%;
+        text-align: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-dim);
+        font-size: 0.9rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero {
+          padding-top: 6rem;
+          height: auto;
+          margin-bottom: 4rem;
+        }
+        .card-container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="logo">InterviewAI</div>
+      <div class="tagline">Elevate Your Career with AI</div>
+    </nav>
+
+    <header class="hero">
+      <h1>Analyze Your Interview<br />Performance with AI</h1>
+      <p>
+        Get real-time feedback on your eye contact, expressions, posture, speech
+        and confidence using professional-grade AI detection.
+      </p>
+
+      <div class="card-container">
+        <a href="{{ url_for('live_video') }}" class="action-card">
+          <i class="fas fa-video"></i>
+          <h2>Live Interview</h2>
+          <p>Use your webcam for real-time analysis and immediate feedback.</p>
+        </a>
+
+        <a href="{{ url_for('recorded_video') }}" class="action-card">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <h2>Upload Video</h2>
+          <p>
+            Upload a recorded interview for full deep-dive analysis and report.
+          </p>
+        </a>
+      </div>
     </header>
 
-    <!-- Video Feed -->
-    <div class="video-section">
-        <img src="{{ url_for('video_feed') }}" alt="Live Feed" id="videoFeed" width="640" height="480">
-        <button id="cameraToggleBtn">Turn Camera ON/OFF</button>
-    </div>
+    <section class="features">
+      <div class="features-grid">
+        <div class="feature-item">
+          <i class="fas fa-eye"></i>
+          <span>Eye Contact</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-smile"></i>
+          <span>Facial Expressions</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-user-tie"></i>
+          <span>Posture</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-wave-square"></i>
+          <span>Speech Patterns</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-comment-dots"></i>
+          <span>Filler Words</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-chart-line"></i>
+          <span>Confidence Score</span>
+        </div>
+      </div>
+    </section>
 
-    <!-- Metrics -->
-    <div class="metrics">
-        <h2>📊 Live Metrics</h2>
-        <p>Emotion: <span id="emotion">Loading...</span> (<span id="confidence">0%</span>)</p>
-        <p>Blinks: <span id="blinkCount">0</span></p>
-    </div>
-
-    <!-- End Interview -->
-    <button id="endInterviewBtn">🏁 End Interview & View Summary</button>
-
-    <!-- Summary -->
-    <div id="summarySection" style="display:none;">
-        <h2>📋 Interview Summary</h2>
-        <p>Duration: <span id="summaryDuration">0m 0s</span></p>
-        <p>Dominant Emotion: <span id="summaryEmotion">-</span></p>
-        <p>Total Blinks: <span id="summaryBlinks">0</span></p>
-    </div>
-</div>
-
-<script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
+    <footer>
+      <p>InterviewAI &copy; 2025</p>
+    </footer>
+  </body>
 </html>

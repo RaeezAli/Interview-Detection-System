@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analyzing Interview | InterviewAI</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --text-main: #ffffff;
+        --text-dim: #a1a1aa;
+        --gradient: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        --success-green: #10b981;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .loading-container {
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        padding: 2rem;
+        animation: fadeIn 1s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .logo {
+        font-size: 1.2rem;
+        font-weight: 700;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 3rem;
+        letter-spacing: 1px;
+        opacity: 0.8;
+      }
+
+      /* Spinner */
+      .ai-icon-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 2rem;
+      }
+
+      .pulsing-brain {
+        font-size: 4rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+          filter: drop-shadow(0 0 0px var(--accent-blue));
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+          filter: drop-shadow(0 0 20px var(--accent-blue));
+        }
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+          filter: drop-shadow(0 0 0px var(--accent-blue));
+        }
+      }
+
+      .loader-ring {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        width: 120px;
+        height: 120px;
+        border: 3px solid transparent;
+        border-top: 3px solid var(--accent-blue);
+        border-radius: 50%;
+        animation: spin 1.5s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      p.subtitle {
+        color: var(--text-dim);
+        margin-bottom: 3rem;
+        font-weight: 300;
+      }
+
+      /* Steps List */
+      .steps-list {
+        text-align: left;
+        margin-bottom: 3rem;
+        padding-left: 1rem;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+        opacity: 0.3;
+        transition: all 0.5s ease;
+        font-size: 0.95rem;
+      }
+
+      .step.active {
+        opacity: 1;
+        color: var(--text-main);
+      }
+
+      .step.completed {
+        opacity: 0.7;
+        color: var(--success-green);
+      }
+
+      .step-icon {
+        width: 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .step i.fa-check {
+        display: none;
+      }
+
+      .step.completed i.fa-check {
+        display: inline-block;
+      }
+
+      .step.active i.fa-circle-notch {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+      }
+
+      .step i.fa-circle-notch {
+        display: none;
+      }
+
+      /* Progress Bar */
+      .progress-wrapper {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--gradient);
+        transition: width 0.5s cubic-bezier(0.1, 0.7, 1, 0.1);
+      }
+
+      .progress-text {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        font-weight: 600;
+      }
+
+      .note {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.3);
+        margin-top: 2rem;
+      }
+
+      /* Success State */
+      .success-checkmark {
+        display: none;
+        color: var(--success-green);
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes popIn {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-container">
+      <div class="logo">InterviewAI</div>
+
+      <!-- Animation Zone -->
+      <div id="loading-view">
+        <div class="ai-icon-wrapper">
+          <div class="loader-ring"></div>
+          <i class="fas fa-brain pulsing-brain"></i>
+        </div>
+
+        <h2 id="status-title">Analyzing Your Interview...</h2>
+        <p class="subtitle">
+          Please wait while our AI processes your performance
+        </p>
+      </div>
+
+      <div id="success-view" style="display: none">
+        <div class="success-checkmark">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Analysis Complete!</h2>
+        <p class="subtitle">Redirecting to your detailed report...</p>
+      </div>
+
+      <!-- Steps List -->
+      <div class="steps-list" id="steps-list">
+        <div class="step" id="step-1">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Extracting video frames...</span>
+        </div>
+        <div class="step" id="step-2">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Analyzing eye contact and gaze...</span>
+        </div>
+        <div class="step" id="step-3">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Detecting facial expressions...</span>
+        </div>
+        <div class="step" id="step-4">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Analyzing posture and body language...</span>
+        </div>
+        <div class="step" id="step-5">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Processing speech and audio...</span>
+        </div>
+        <div class="step" id="step-6">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Detecting filler words...</span>
+        </div>
+        <div class="step" id="step-7">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Calculating confidence score...</span>
+        </div>
+        <div class="step" id="step-8">
+          <div class="step-icon">
+            <i class="fas fa-circle-notch"></i><i class="fas fa-check"></i>
+          </div>
+          <span>Generating your report...</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-wrapper">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text">
+          <span id="percent-text">0</span>% Complete
+        </div>
+      </div>
+
+      <div class="note">
+        This may take a few seconds to a minute depending on video length
+      </div>
+    </div>
+
+    <script>
+      const steps = [
+        "step-1",
+        "step-2",
+        "step-3",
+        "step-4",
+        "step-5",
+        "step-6",
+        "step-7",
+        "step-8",
+      ];
+
+      const progressFill = document.getElementById("progress-fill");
+      const percentText = document.getElementById("percent-text");
+      const loadingView = document.getElementById("loading-view");
+      const successView = document.getElementById("success-view");
+      const stepsList = document.getElementById("steps-list");
+
+      let currentStep = 0;
+
+      function processSteps() {
+        if (currentStep < steps.length) {
+          const stepId = steps[currentStep];
+          const prevStepId = currentStep > 0 ? steps[currentStep - 1] : null;
+
+          // Mark previous as completed
+          if (prevStepId) {
+            const prevEl = document.getElementById(prevStepId);
+            prevEl.classList.remove("active");
+            prevEl.classList.add("completed");
+          }
+
+          // Mark current as active
+          const currentEl = document.getElementById(stepId);
+          currentEl.classList.add("active");
+
+          // Update Progress
+          const progress = Math.round(((currentStep + 1) / steps.length) * 100);
+          progressFill.style.width = progress + "%";
+          percentText.textContent = progress;
+
+          currentStep++;
+
+          // Random delay between 1.5 and 2 seconds for natural feel
+          const delay = 1500 + Math.random() * 500;
+          setTimeout(processSteps, delay);
+        } else {
+          // Finalize last step
+          const lastEl = document.getElementById(steps[steps.length - 1]);
+          lastEl.classList.remove("active");
+          lastEl.classList.add("completed");
+
+          finishLoading();
+        }
+      }
+
+      function finishLoading() {
+        setTimeout(() => {
+          loadingView.style.display = "none";
+          stepsList.style.display = "none";
+          successView.style.display = "block";
+          document.querySelector(".success-checkmark").style.display = "block";
+
+          // Final redirect
+          setTimeout(() => {
+            window.location.href = "/report";
+          }, 1500);
+        }, 800);
+      }
+
+      // Start the simulation after a short initial delay
+      window.onload = () => {
+        setTimeout(processSteps, 1000);
+      };
+    </script>
+  </body>
+</html>

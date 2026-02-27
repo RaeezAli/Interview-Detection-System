@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Interview | InterviewAI</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --card-bg: #161616;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --accent-yellow: #f59e0b;
+        --text-main: #ffffff;
+        --text-dim: #a1a1aa;
+        --gradient: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* Navbar */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 5%;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .logo {
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-decoration: none;
+      }
+
+      .nav-links a {
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        transition: 0.3s;
+      }
+
+      /* Main Grid Layout */
+      .container {
+        display: grid;
+        grid-template-columns: 60% 40%;
+        gap: 2rem;
+        padding: 6rem 5% 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+        height: calc(100vh - 40px);
+      }
+
+      /* Left Column - Video */
+      .video-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .video-wrapper {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/9;
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      #webcam {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1); /* Mirror effect */
+      }
+
+      .live-indicator {
+        position: absolute;
+        top: 1.5rem;
+        left: 1.5rem;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 0.5rem 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-red);
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.2);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .video-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+      }
+
+      .timer {
+        font-family: monospace;
+        font-size: 1.5rem;
+        color: var(--text-dim);
+        background: var(--card-bg);
+        padding: 0.5rem 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+      }
+
+      .btn-start {
+        background: var(--accent-green);
+      }
+      .btn-end {
+        background: var(--accent-red);
+      }
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Right Column - Stats */
+      .stats-column {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        overflow-y: auto;
+      }
+
+      .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+      }
+
+      .stats-header h2 {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .stats-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1.2rem;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .stat-label {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 0.95rem;
+        color: var(--text-dim);
+      }
+
+      .stat-value {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .indicator-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 0.5rem;
+      }
+
+      .green {
+        background: var(--accent-green);
+      }
+      .yellow {
+        background: var(--accent-yellow);
+      }
+      .red {
+        background: var(--accent-red);
+      }
+
+      .progress-container {
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--gradient);
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+
+      /* Tips Section */
+      .tips-panel {
+        margin-top: auto;
+        background: rgba(59, 130, 246, 0.05);
+        padding: 1.2rem;
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+      }
+
+      .tips-panel h4 {
+        font-size: 0.85rem;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .tip-content {
+        font-size: 0.9rem;
+        color: var(--text-dim);
+      }
+
+      /* Overlay */
+      #overlay {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 1100px) {
+        .container {
+          grid-template-columns: 1fr;
+          height: auto;
+          padding-top: 5rem;
+        }
+        .video-wrapper {
+          aspect-ratio: 4/3;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
+      <div class="nav-links">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Left Column: Video Feed -->
+      <div class="video-column">
+        <div class="video-wrapper">
+          <div class="live-indicator" id="live-badge" style="display: none">
+            <div class="dot"></div>
+            LIVE
+          </div>
+          <video id="webcam" autoplay playsinline></video>
+
+          <div id="overlay">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Processing your interview...</p>
+          </div>
+        </div>
+
+        <div class="video-controls">
+          <div class="timer" id="timer">00:00:00</div>
+          <div class="btn-group">
+            <button class="btn btn-start" id="start-btn">
+              <i class="fas fa-play"></i> Start Interview
+            </button>
+            <button class="btn btn-end" id="end-btn" disabled>
+              <i class="fas fa-stop"></i> End Interview
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Analysis Stats -->
+      <div class="stats-column">
+        <div class="stats-header">
+          <h2>Live Analysis</h2>
+          <i class="fas fa-microchip" style="color: var(--accent-purple)"></i>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label"><i class="fas fa-eye"></i> Eye Contact</div>
+            <div class="stat-value">
+              <span id="stat-gaze">Analyzing...</span>
+              <span class="indicator-dot" id="dot-gaze"></span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">
+              <i class="fas fa-smile"></i> Expression
+            </div>
+            <div class="stat-value" id="stat-emotion">Analyzing...</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">
+              <i class="fas fa-user-tie"></i> Posture
+            </div>
+            <div class="stat-value" id="stat-posture">Analyzing...</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">
+              <i class="fas fa-wave-square"></i> Speech Pace
+            </div>
+            <div class="stat-value" id="stat-pace">Analyzing...</div>
+          </div>
+
+          <div
+            class="stat-card"
+            style="flex-direction: column; align-items: flex-start"
+          >
+            <div class="stat-label" style="margin-bottom: 0.8rem">
+              <i class="fas fa-comment-dots"></i> Filler Words
+            </div>
+            <div
+              class="stat-value"
+              id="stat-fillers"
+              style="font-size: 0.9rem; color: var(--accent-purple)"
+            >
+              uh: 0, um: 0, like: 0
+            </div>
+          </div>
+
+          <div class="progress-container">
+            <div class="stat-label" style="justify-content: space-between">
+              <span><i class="fas fa-chart-line"></i> Confidence Score</span>
+              <span id="score-text">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="score-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tips-panel">
+          <h4><i class="fas fa-lightbulb"></i> Live tips</h4>
+          <div class="tip-content" id="tip-text">
+            Waiting for analysis to start...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const video = document.getElementById("webcam");
+      const startBtn = document.getElementById("start-btn");
+      const endBtn = document.getElementById("end-btn");
+      const timerDisplay = document.getElementById("timer");
+      const liveBadge = document.getElementById("live-badge");
+      const overlay = document.getElementById("overlay");
+
+      let socket = io();
+      let stream = null;
+      let startTime = null;
+      let timerInterval = null;
+
+      // Initialize Socket.IO connection
+      socket.on("connect", () => {
+        console.log("Connected to server");
+      });
+
+      socket.on("status", (data) => {
+        console.log("Backend status:", data.message);
+      });
+
+      // Handle Start Interview
+      startBtn.addEventListener("click", async () => {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          video.srcObject = stream;
+
+          startBtn.disabled = true;
+          endBtn.disabled = false;
+          liveBadge.style.display = "flex";
+
+          // Start Timer
+          startTime = Date.now();
+          timerInterval = setInterval(updateTimer, 1000);
+
+          // Emit event to backend
+          socket.emit("start_live_analysis", { timestamp: startTime });
+
+          document.getElementById("tip-text").textContent =
+            "Maintain a steady gaze at the camera and speak clearly.";
+        } catch (err) {
+          console.error("Error accessing webcam:", err);
+          alert("Could not access webcam. Please check permissions.");
+        }
+      });
+
+      // Handle End Interview
+      endBtn.addEventListener("click", () => {
+        // Stop webcam
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
+
+        // Stop Timer
+        clearInterval(timerInterval);
+
+        // Show Overlay
+        overlay.style.display = "flex";
+
+        // Emit stop event
+        socket.emit("stop_live_analysis");
+
+        // Redirect after delay
+        setTimeout(() => {
+          window.location.href = "{{ url_for('loading') }}";
+        }, 2000);
+      });
+
+      function updateTimer() {
+        const elapsed = Date.now() - startTime;
+        const totalSeconds = Math.floor(elapsed / 1000);
+
+        const hours = Math.floor(totalSeconds / 3600)
+          .toString()
+          .padStart(2, "0");
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+          .toString()
+          .padStart(2, "0");
+        const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+
+        timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+      }
+
+      // --- Stats Update logic (Placeholders) ---
+      // This will be connected to actual backend events later
+      function updateStats(data) {
+        // Mapping incoming data to DOM elements
+        if (data.gaze) {
+          document.getElementById("stat-gaze").textContent = data.gaze.status;
+          document.getElementById("dot-gaze").className =
+            `indicator-dot ${data.gaze.color}`;
+        }
+        // etc...
+      }
+    </script>
+  </body>
+</html>

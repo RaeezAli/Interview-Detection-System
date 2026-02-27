@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Interview | InterviewAI</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --card-bg: #161616;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --text-main: #ffffff;
+        --text-dim: #a1a1aa;
+        --gradient: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Navbar */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 5%;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-decoration: none;
+      }
+
+      .nav-links a {
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        transition: 0.3s;
+      }
+
+      .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main Content */
+      main {
+        flex: 1;
+        padding: 8rem 5% 4rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .header-section {
+        margin-bottom: 3rem;
+        max-width: 800px;
+      }
+
+      .header-section h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .header-section p {
+        color: var(--text-dim);
+        font-size: 1.1rem;
+      }
+
+      /* Upload Container */
+      .upload-container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: 2.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .drop-zone {
+        width: 100%;
+        height: 300px;
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        background: rgba(255, 255, 255, 0.01);
+      }
+
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--accent-blue);
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      .drop-zone i {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        color: var(--accent-blue);
+      }
+
+      .drop-zone p {
+        font-size: 1.1rem;
+        color: var(--text-dim);
+        margin-bottom: 0.5rem;
+      }
+
+      .drop-zone span {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      #video-input {
+        display: none;
+      }
+
+      /* Preview area */
+      #preview-area {
+        margin-top: 2rem;
+        display: none;
+        width: 100%;
+      }
+
+      .file-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        text-align: left;
+      }
+
+      .file-info-text h4 {
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
+        word-break: break-all;
+      }
+
+      .file-info-text p {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+      }
+
+      video {
+        width: 100%;
+        border-radius: 12px;
+        max-height: 400px;
+        background: #000;
+      }
+
+      /* Button */
+      .submit-btn {
+        width: 100%;
+        padding: 1.2rem;
+        margin-top: 2rem;
+        border: none;
+        border-radius: 12px;
+        background: var(--gradient);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.8rem;
+      }
+
+      .submit-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Info Section */
+      .info-badges {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        margin-top: 3rem;
+      }
+
+      .badge-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+      }
+
+      .badge-item i {
+        color: var(--accent-blue);
+      }
+
+      /* Footer */
+      footer {
+        padding: 3rem 5%;
+        text-align: center;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-dim);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
+        .info-badges {
+          flex-direction: column;
+          gap: 1.5rem;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
+      <div class="nav-links">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+      </div>
+    </nav>
+
+    <main>
+      <div class="header-section">
+        <h1>Upload Your Interview Video</h1>
+        <p>
+          We'll analyze your eye contact, expressions, posture, speech and give
+          you a full report to help you improve.
+        </p>
+      </div>
+
+      <div class="upload-container">
+        <form
+          id="upload-form"
+          action="{{ url_for('upload_video') }}"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <div class="drop-zone" id="drop-zone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Drag & Drop your video here or click to browse</p>
+            <span>Formats: MP4, AVI, MOV, MKV (Max 500MB)</span>
+            <input type="file" name="video" id="video-input" accept="video/*" />
+          </div>
+
+          <div id="preview-area">
+            <div class="file-info">
+              <div class="file-info-text">
+                <h4 id="file-name">filename.mp4</h4>
+                <p id="file-size">0.0 MB</p>
+              </div>
+              <i
+                class="fas fa-check-circle"
+                style="color: var(--accent-blue)"
+              ></i>
+            </div>
+            <video id="video-preview" controls></video>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn" disabled>
+            <span class="btn-text">Start Analysis</span>
+            <div class="spinner" id="spinner"></div>
+          </button>
+        </form>
+      </div>
+
+      <div class="info-badges">
+        <div class="badge-item">
+          <i class="fas fa-shield-alt"></i>
+          <span>Secure Upload</span>
+        </div>
+        <div class="badge-item">
+          <i class="fas fa-microchip"></i>
+          <span>AI Powered Analysis</span>
+        </div>
+        <div class="badge-item">
+          <i class="fas fa-file-alt"></i>
+          <span>Detailed Report</span>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>InterviewAI &copy; 2025</p>
+    </footer>
+
+    <script>
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("video-input");
+      const previewArea = document.getElementById("preview-area");
+      const videoPreview = document.getElementById("video-preview");
+      const fileNameDisplay = document.getElementById("file-name");
+      const fileSizeDisplay = document.getElementById("file-size");
+      const submitBtn = document.getElementById("submit-btn");
+      const uploadForm = document.getElementById("upload-form");
+      const spinner = document.getElementById("spinner");
+      const btnText = document.querySelector(".btn-text");
+
+      // Handle click to select
+      dropZone.addEventListener("click", () => fileInput.click());
+
+      // Handle file selection
+      fileInput.addEventListener("change", handleFiles);
+
+      // Handle drag and drop
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+
+      ["dragleave", "dragend"].forEach((type) => {
+        dropZone.addEventListener(type, () => {
+          dropZone.classList.remove("drag-over");
+        });
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          handleFiles();
+        }
+      });
+
+      function handleFiles() {
+        const file = fileInput.files[0];
+        if (file && file.type.startsWith("video/")) {
+          // Check file size (500MB)
+          const maxSize = 500 * 1024 * 1024;
+          if (file.size > maxSize) {
+            alert("File is too large. Max size is 500MB.");
+            fileInput.value = "";
+            return;
+          }
+
+          // Update UI hints
+          fileNameDisplay.textContent = file.name;
+          fileSizeDisplay.textContent =
+            (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+          // Show preview
+          const url = URL.createObjectURL(file);
+          videoPreview.src = url;
+          previewArea.style.display = "block";
+          dropZone.style.display = "none";
+
+          // Enable button
+          submitBtn.disabled = false;
+        } else {
+          alert("Please select a valid video file.");
+          fileInput.value = "";
+        }
+      }
+
+      // Handle form submission
+      uploadForm.addEventListener("submit", (e) => {
+        btnText.style.display = "none";
+        spinner.style.display = "block";
+        submitBtn.disabled = true;
+        // Form will submit naturally
+      });
+    </script>
+  </body>
+</html>

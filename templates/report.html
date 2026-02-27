@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interview Report | InterviewAI</title>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --card-bg: #161616;
+        --accent-blue: #3b82f6;
+        --accent-purple: #8b5cf6;
+        --accent-green: #10b981;
+        --accent-yellow: #f59e0b;
+        --accent-red: #ef4444;
+        --text-main: #ffffff;
+        --text-dim: #a1a1aa;
+        --gradient: linear-gradient(
+          135deg,
+          var(--accent-blue),
+          var(--accent-purple)
+        );
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* Navbar */
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 5%;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(10px);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-decoration: none;
+      }
+
+      .nav-actions {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.9rem;
+        opacity: 0.7;
+        transition: 0.3s;
+      }
+
+      .nav-link:hover {
+        opacity: 1;
+      }
+
+      .btn-download {
+        background: var(--gradient);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: 0.3s;
+      }
+
+      .btn-download:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+      }
+
+      /* Report Content */
+      main {
+        padding: 7rem 5% 4rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .report-header {
+        margin-bottom: 4rem;
+        text-align: center;
+      }
+
+      .report-header h1 {
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .report-header p {
+        color: var(--text-dim);
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+      }
+
+      .meta-info {
+        display: flex;
+        justify-content: center;
+        gap: 3rem;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+      }
+
+      .meta-item i {
+        margin-right: 0.5rem;
+        color: var(--accent-blue);
+      }
+
+      /* Overall Score Section */
+      .overall-score-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 5rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 3rem;
+        border-radius: 32px;
+        border: 1px solid var(--border-color);
+      }
+
+      .score-chart-container {
+        position: relative;
+        width: 250px;
+        height: 250px;
+        margin-bottom: 2rem;
+      }
+
+      .score-inner-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .score-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .score-label {
+        font-size: 0.9rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .performance-tag {
+        padding: 0.6rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+
+      /* Category Grid */
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        transition: 0.3s;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dim);
+      }
+
+      .card-title i {
+        color: var(--accent-blue);
+        font-size: 1.3rem;
+      }
+
+      .card-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      .chart-wrapper {
+        width: 100%;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Progress Bars */
+      .bar-container {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+
+      .bar-fill {
+        height: 100%;
+        background: var(--gradient);
+        border-radius: 4px;
+      }
+
+      /* Filler words pills */
+      .filler-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+      }
+
+      .pill {
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--accent-purple);
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+      }
+
+      /* Print Overlay */
+      @media print {
+        nav,
+        .btn-download {
+          display: none !important;
+        }
+        body {
+          background: white;
+          color: black;
+        }
+        main {
+          padding-top: 2rem;
+        }
+        .card,
+        .overall-score-section {
+          border: 1px solid #ddd;
+          background: #fff !important;
+          box-shadow: none !important;
+        }
+        .text-dim {
+          color: #666 !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .report-header h1 {
+          font-size: 2rem;
+        }
+        .meta-info {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .overall-score-section {
+          padding: 2rem 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
+      <div class="nav-actions">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <button class="btn-download" onclick="window.print()">
+          <i class="fas fa-file-pdf"></i> Download Report
+        </button>
+      </div>
+    </nav>
+
+    <main>
+      <div class="report-header">
+        <h1>Your Interview Analysis Report</h1>
+        <p>Detailed breakdown of your performance metrics and AI feedback.</p>
+
+        <div class="meta-info">
+          <div class="meta-item">
+            <i class="fas fa-calendar-alt"></i> Date:
+            <span id="report-date">February 28, 2026</span>
+          </div>
+          <div class="meta-item">
+            <i class="fas fa-clock"></i> Time: <span>12:45 AM</span>
+          </div>
+          <div class="meta-item">
+            <i class="fas fa-hourglass-half"></i> Duration: <span>05:32</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="overall-score-section">
+        <div class="score-chart-container">
+          <canvas id="overallScoreChart"></canvas>
+          <div class="score-inner-text">
+            <div class="score-number" id="overall-score-val">78</div>
+            <div class="score-label">Score</div>
+          </div>
+        </div>
+        <div class="performance-tag" id="performance-label">
+          Good Performance
+        </div>
+      </section>
+
+      <section class="category-grid">
+        <!-- Eye Contact -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-eye"></i> Eye Contact</div>
+            <div class="card-value">85%</div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="eyeContactChart"></canvas>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill" style="width: 85%"></div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-dim)">
+            Excellent focus. You maintained steady contact with the camera for
+            85% of the session.
+          </p>
+        </div>
+
+        <!-- Emotions -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-smile"></i> Expressions
+            </div>
+            <div class="card-value">Confident</div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="emotionChart"></canvas>
+          </div>
+          <div
+            class="emotion-stats"
+            style="
+              display: flex;
+              justify-content: space-between;
+              font-size: 0.85rem;
+            "
+          >
+            <span
+              ><i
+                class="fas fa-check-circle"
+                style="color: var(--accent-green)"
+              ></i>
+              Confident 60%</span
+            >
+            <span
+              ><i
+                class="fas fa-minus-circle"
+                style="color: var(--text-dim)"
+              ></i>
+              Neutral 30%</span
+            >
+          </div>
+        </div>
+
+        <!-- Posture -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-user-tie"></i> Posture
+            </div>
+            <div class="card-value">Upright</div>
+          </div>
+          <div class="chart-wrapper">
+            <div style="font-size: 4rem; color: var(--accent-blue)">
+              <i class="fas fa-street-view"></i>
+            </div>
+          </div>
+          <div class="bar-container">
+            <div
+              class="bar-fill"
+              style="width: 92%; background: var(--accent-green)"
+            ></div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-dim)">
+            Great body language. You remained upright throughout the interview.
+          </p>
+        </div>
+
+        <!-- Speech Pace -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-wave-square"></i> Speech Pace
+            </div>
+            <div class="card-value">Normal</div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="paceChart"></canvas>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-dim)">
+            Your average pace was 145 words per minute, which is ideal for
+            engagement.
+          </p>
+        </div>
+
+        <!-- Filler Words -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-comment-dots"></i> Filler Words
+            </div>
+            <div class="card-value">11 Total</div>
+          </div>
+          <div class="filler-pills">
+            <div class="pill">uh: 5</div>
+            <div class="pill">um: 3</div>
+            <div class="pill">like: 2</div>
+            <div class="pill">so: 1</div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-dim)">
+            Try to reduce the use of "uh" and "um" to sound more authoritative.
+          </p>
+        </div>
+
+        <!-- Confidence Trend -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fas fa-chart-line"></i> Confidence Trend
+            </div>
+            <div class="card-value">
+              Growing
+              <i class="fas fa-arrow-up" style="color: var(--accent-green)"></i>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="trendChart"></canvas>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-dim)">
+            You started slightly nervous but gained confidence as the interview
+            progressed.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Set dynamic date
+      document.getElementById("report-date").textContent =
+        new Date().toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+
+      const score = 78;
+      const ctxOverall = document
+        .getElementById("overallScoreChart")
+        .getContext("2d");
+
+      let scoreColor = "#10b981"; // Green
+      if (score <= 40)
+        scoreColor = "#ef4444"; // Red
+      else if (score <= 70) scoreColor = "#f59e0b"; // Yellow
+
+      // Overall Score Donut
+      new Chart(ctxOverall, {
+        type: "doughnut",
+        data: {
+          datasets: [
+            {
+              data: [score, 100 - score],
+              backgroundColor: [scoreColor, "rgba(255, 255, 255, 0.05)"],
+              borderWidth: 0,
+              circumference: 270,
+              rotation: 225,
+              cutout: "85%",
+              borderRadius: 10,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        },
+      });
+
+      // Eye Contact Mini Line Chart
+      new Chart(document.getElementById("eyeContactChart"), {
+        type: "line",
+        data: {
+          labels: ["Start", "Min 1", "Min 2", "Min 3", "End"],
+          datasets: [
+            {
+              label: "Focus",
+              data: [60, 85, 90, 80, 85],
+              borderColor: "#3b82f6",
+              backgroundGradient: "rgba(59, 130, 246, 0.1)",
+              tension: 0.4,
+              pointRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { display: false }, y: { display: false } },
+          plugins: { legend: { display: false } },
+        },
+      });
+
+      // Emotion Radar or Bar
+      new Chart(document.getElementById("emotionChart"), {
+        type: "bar",
+        data: {
+          labels: ["Confident", "Neutral", "Nervous"],
+          datasets: [
+            {
+              data: [60, 30, 10],
+              backgroundColor: ["#10b981", "#3b82f6", "#ef4444"],
+              borderRadius: 5,
+            },
+          ],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { display: false },
+            y: { grid: { display: false }, ticks: { color: "#a1a1aa" } },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+
+      // Pace Chart
+      new Chart(document.getElementById("paceChart"), {
+        type: "line",
+        data: {
+          labels: [1, 2, 3, 4, 5],
+          datasets: [
+            {
+              data: [130, 140, 145, 142, 148],
+              borderColor: "#8b5cf6",
+              tension: 0.3,
+              fill: true,
+              backgroundColor: "rgba(139, 92, 246, 0.1)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { display: false }, y: { display: false } },
+          plugins: { legend: { display: false } },
+        },
+      });
+
+      // Trend Chart
+      new Chart(document.getElementById("trendChart"), {
+        type: "line",
+        data: {
+          labels: [1, 2, 3, 4, 5],
+          datasets: [
+            {
+              data: [40, 55, 75, 72, 85],
+              borderColor: "#10b981",
+              tension: 0.4,
+              fill: false,
+              pointRadius: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { display: false }, y: { display: false } },
+          plugins: { legend: { display: false } },
+        },
+      });
+    </script>
+  </body>
+</html>
