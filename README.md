@@ -30,19 +30,19 @@
 ## 🖥 Demo
 
 ### Upload Video Mode
-
 Upload any recorded interview video and get a full analysis report.
 
 ### Live Interview Mode
-
 Use your webcam to record a live interview session and get analyzed after.
+
+### Practice Mode
+Answer AI-generated interview questions and receive instant feedback.
 
 ---
 
 ## 🛠 Tech Stack
 
 **Backend:**
-
 - Python 3.11
 - Flask + Flask-SocketIO
 - OpenCV
@@ -52,10 +52,10 @@ Use your webcam to record a live interview session and get analyzed after.
 - Anthropic Claude API
 
 **Frontend:**
-
 - HTML5 + CSS3 + JavaScript
 - Chart.js
 - Socket.IO
+- Font Awesome
 
 ---
 
