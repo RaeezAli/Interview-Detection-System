@@ -1,19 +1,17 @@
 import cv2
-import mediapipe as mp
 import numpy as np
 import math
 from collections import Counter
+import mediapipe.python.solutions.pose as pose_module
+import mediapipe.python.solutions.drawing_utils as drawing_utils_module
 
-# Initialize MediaPipe Pose
-mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(
+pose = pose_module.Pose(
     static_image_mode=False,
     model_complexity=1,
     smooth_landmarks=True,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
 )
-mp_drawing = mp.solutions.drawing_utils
 
 def calculate_angle(a, b, c):
     """
@@ -43,6 +41,10 @@ def detect_posture(frame):
     """
     if frame is None:
         return {"posture_label": "No Frame", "score": 0, "issues": [], "is_upright": False}
+
+    # PERFORMANCE: Resize if too large
+    if frame.shape[1] > 640:
+        frame = cv2.resize(frame, (640, 480))
 
     # Convert BGR to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

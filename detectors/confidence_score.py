@@ -84,7 +84,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
     gaze_score = gaze_summary.get("average_score", 0)
     if gaze_score < 40:
         rec = {
-            "category": "Eye Contact", "icon": "👁",
+            "category": "Eye Contact", "icon": "EYE",
             "title": "Improve Eye Contact", "priority": "High",
             "description": (
                 "Your eye contact was poor during the interview. Practice looking directly at the camera lens "
@@ -93,7 +93,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif gaze_score <= 70:
         rec = {
-            "category": "Eye Contact", "icon": "👁",
+            "category": "Eye Contact", "icon": "EYE",
             "title": "Increase Eye Contact Consistency", "priority": "Medium",
             "description": (
                 "Your eye contact was inconsistent. Try to focus on the camera more consistently, "
@@ -102,7 +102,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     else:
         rec = {
-            "category": "Eye Contact", "icon": "👁",
+            "category": "Eye Contact", "icon": "EYE",
             "title": "Great Eye Contact", "priority": "Low",
             "description": "Good eye contact overall. Keep maintaining this habit in future interviews."
         }
@@ -112,7 +112,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
     dominant_emotion = emotion_summary.get("dominant_emotion_overall", "neutral")
     if dominant_emotion in ("fear", "angry"):
         rec = {
-            "category": "Expression", "icon": "😊",
+            "category": "Expression", "icon": "FACE",
             "title": "Manage Nervousness", "priority": "High",
             "description": (
                 "You appeared nervous or stressed. Practice deep breathing before interviews and "
@@ -121,7 +121,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif dominant_emotion == "sad":
         rec = {
-            "category": "Expression", "icon": "😊",
+            "category": "Expression", "icon": "FACE",
             "title": "Increase Energy and Enthusiasm", "priority": "Medium",
             "description": (
                 "You appeared low energy. Show more enthusiasm by smiling naturally "
@@ -130,7 +130,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif dominant_emotion == "neutral":
         rec = {
-            "category": "Expression", "icon": "😊",
+            "category": "Expression", "icon": "FACE",
             "title": "Show More Positive Expressions", "priority": "Low",
             "description": (
                 "You were calm but try to show more positive emotions. "
@@ -139,7 +139,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     else:
         rec = {
-            "category": "Expression", "icon": "😊",
+            "category": "Expression", "icon": "FACE",
             "title": "Excellent Positive Energy", "priority": "Low",
             "description": "Great positive energy throughout. Keep this up in future interviews."
         }
@@ -149,7 +149,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
     posture_issue = posture_summary.get("most_frequent_issue", "None")
     if posture_issue == "Severe Slouching":
         rec = {
-            "category": "Posture", "icon": "🧍",
+            "category": "Posture", "icon": "BODY",
             "title": "Fix Severe Slouching", "priority": "High",
             "description": (
                 "Severe slouching was detected. Sit at the edge of your chair with your back straight "
@@ -158,25 +158,25 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif posture_issue == "Mild Slouching":
         rec = {
-            "category": "Posture", "icon": "🧍",
+            "category": "Posture", "icon": "BODY",
             "title": "Correct Mild Slouching", "priority": "Medium",
             "description": "Mild slouching was detected. Be mindful of your back position and try to sit upright throughout."
         }
     elif posture_issue == "Forward Head Posture":
         rec = {
-            "category": "Posture", "icon": "🧍",
+            "category": "Posture", "icon": "BODY",
             "title": "Correct Head Position", "priority": "Medium",
             "description": "Forward head posture was detected. Pull your chin back slightly and align your ears over your shoulders."
         }
     elif posture_issue in ("Leaning Left", "Leaning Right"):
         rec = {
-            "category": "Posture", "icon": "🧍",
+            "category": "Posture", "icon": "BODY",
             "title": "Sit Centered", "priority": "Low",
             "description": "You were leaning to one side at times. Distribute your weight evenly and sit centered."
         }
     else:
         rec = {
-            "category": "Posture", "icon": "🧍",
+            "category": "Posture", "icon": "BODY",
             "title": "Excellent Posture", "priority": "Low",
             "description": "Excellent posture maintained. Keep this professional body language in future interviews."
         }
@@ -186,7 +186,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
     pace_label = speech_analysis.get("pace_analysis", {}).get("pace_label", "Normal Pace")
     if pace_label == "Too Fast":
         rec = {
-            "category": "Speech Pace", "icon": "🎙",
+            "category": "Speech Pace", "icon": "MIC",
             "title": "Slow Down Your Speech", "priority": "High",
             "description": (
                 "You spoke too quickly, which can make it hard for interviewers to follow. "
@@ -195,7 +195,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif pace_label == "Too Slow":
         rec = {
-            "category": "Speech Pace", "icon": "🎙",
+            "category": "Speech Pace", "icon": "MIC",
             "title": "Pick Up Your Speaking Pace", "priority": "High",
             "description": (
                 "Your speech was too slow, which can appear as a lack of confidence. "
@@ -204,13 +204,13 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif pace_label in ("Slightly Fast", "Slightly Slow"):
         rec = {
-            "category": "Speech Pace", "icon": "🎙",
+            "category": "Speech Pace", "icon": "MIC",
             "title": "Calibrate Your Speed", "priority": "Medium",
             "description": "Record yourself speaking and listen back to calibrate your natural pace."
         }
     else:
         rec = {
-            "category": "Speech Pace", "icon": "🎙",
+            "category": "Speech Pace", "icon": "MIC",
             "title": "Great Speech Pace", "priority": "Low",
             "description": "Great speech pace maintained. Keep this natural rhythm in future interviews."
         }
@@ -220,7 +220,7 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
     filler_count = speech_analysis.get("filler_analysis", {}).get("total_filler_count", 0)
     if filler_count > 20:
         rec = {
-            "category": "Filler Words", "icon": "🔤",
+            "category": "Filler Words", "icon": "ABC",
             "title": "Reduce Filler Words Urgently", "priority": "High",
             "description": (
                 "You used a high number of filler words like 'uh', 'um', and 'like'. "
@@ -229,19 +229,19 @@ def generate_recommendations(gaze_summary, emotion_summary, posture_summary, spe
         }
     elif filler_count >= 8:
         rec = {
-            "category": "Filler Words", "icon": "🔤",
+            "category": "Filler Words", "icon": "ABC",
             "title": "Reduce Filler Words", "priority": "Medium",
             "description": "You used a moderate number of filler words. Record practice interviews and consciously pause instead of saying 'uh' or 'um'."
         }
     elif filler_count >= 1:
         rec = {
-            "category": "Filler Words", "icon": "🔤",
+            "category": "Filler Words", "icon": "ABC",
             "title": "Minor Filler Word Usage", "priority": "Low",
             "description": "You used very few filler words. Minor refinement will make your speech even more polished."
         }
     else:
         rec = {
-            "category": "Filler Words", "icon": "🔤",
+            "category": "Filler Words", "icon": "ABC",
             "title": "Excellent — No Filler Words", "priority": "Low",
             "description": "Excellent! No significant filler words detected. Very professional speech."
         }

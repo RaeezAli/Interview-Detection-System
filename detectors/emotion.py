@@ -1,11 +1,10 @@
+from deepface import DeepFace
 import cv2
 import numpy as np
-from fer import FER
 from collections import Counter
 
-# Initialize the FER detector
-# mtcnn=True provides better accuracy but is slightly slower
-detector = FER(mtcnn=True)
+# DeepFace does not need initialization, it is called directly
+# Do NOT try to create a DeepFace() instance - it is used as a static class
 
 # Mapping standard FER emotions to interview-friendly labels
 EMOTION_MAP = {
@@ -42,51 +41,87 @@ def get_emotion_color(emotion):
     }
     return colors.get(emotion, (255, 255, 255)) # Default White
 
+def default_emotion_result():
+    """Returns a default neutral emotion result for fallbacks."""
+    return {
+        'dominant_emotion': 'neutral',
+        'interview_label': 'Calm & Composed',
+        'emotions': {},
+        'score': 85, # Neutral is good in interviews
+        'face_confidence': 0
+    }
+
 def detect_emotion(frame):
     """
-    Detects facial emotions using FER and returns detailed results.
+    Detects facial emotions using DeepFace and returns detailed results.
+    Optimized for interview context: neutral is treated as positive.
     """
-    if frame is None:
-        return {
-            "dominant_emotion": "No Frame",
-            "emotions": {},
-            "score": 0,
-            "interview_label": "Unknown"
+    try:
+        if frame is None:
+            return default_emotion_result()
+        
+        # PERFORMANCE: Resize locally for even faster analysis if not already resized
+        small_frame = cv2.resize(frame, (320, 240))
+        
+        result = DeepFace.analyze(
+            img_path=small_frame,
+            actions=['emotion'],
+            enforce_detection=False,
+            detector_backend='opencv',
+            silent=True
+        )
+        
+        if isinstance(result, list):
+            result = result[0]
+        
+        emotions = result.get('emotion', {})
+        dominant = result.get('dominant_emotion', 'neutral')
+        
+        # Improved interview emotion mapping
+        # Key fix: treat neutral as positive/composed in interview context
+        emotion_label_map = {
+            'happy': 'Confident & Friendly',
+            'neutral': 'Calm & Composed',
+            'surprise': 'Engaged',
+            'sad': 'Low Energy',
+            'angry': 'Stressed',
+            'fear': 'Nervous',
+            'disgust': 'Uncomfortable'
         }
-
-    # FER detects emotions and returns a list of dictionaries (one for each face)
-    results = detector.detect_emotions(frame)
-
-    if not results:
-        return {
-            "dominant_emotion": "No Face Detected",
-            "emotions": {},
-            "score": 0,
-            "interview_label": "Unknown"
+        
+        # Improved scoring - give neutral a better score
+        score_map = {
+            'happy': 95,
+            'neutral': 85,
+            'surprise': 75,
+            'sad': 45,
+            'angry': 35,
+            'fear': 30,
+            'disgust': 25
         }
-
-    # Extract info for the first (primary) face detected
-    first_face = results[0]
-    box = first_face["box"] # [x, y, w, h]
-    emotions = first_face["emotions"]
+        
+        # IMPORTANT FIX: Override misdetections of 'sad' or 'fear' 
+        # when happy+neutral combined indicate a generally positive state.
+        positive_score = emotions.get('happy', 0) + emotions.get('neutral', 0)
+        if positive_score > 60 and dominant in ['sad', 'fear', 'disgust']:
+            dominant = 'neutral'
+        
+        interview_label = emotion_label_map.get(dominant, 'Calm & Composed')
+        score = score_map.get(dominant, 80)
+        
+        return {
+            'dominant_emotion': dominant,
+            'interview_label': interview_label,
+            'emotions': emotions,
+            'score': score,
+            # Region info for overlay
+            "box": [result.get('region', {}).get(k, 0) for k in ['x', 'y', 'w', 'h']],
+            'face_confidence': result.get('face_confidence', 0.9)
+        }
     
-    # Get dominant emotion using simple max
-    dominant_emotion = max(emotions, key=emotions.get)
-    
-    # Map to interview labels
-    interview_label = EMOTION_MAP.get(dominant_emotion, "Analyzing...")
-    
-    # Calculate score
-    score = EMOTION_SCORES.get(dominant_emotion, 0)
-    
-    return {
-        "dominant_emotion": dominant_emotion,
-        "interview_label": interview_label,
-        "emotions": emotions,
-        "score": score,
-        "box": box,
-        "face_confidence": 1.0 # FER doesn't give box confidence directly in same return
-    }
+    except Exception as e:
+        print(f"Emotion detection error: {e}")
+        return default_emotion_result()
 
 def get_emotion_summary(emotion_results_list):
     """
@@ -106,31 +141,48 @@ def get_emotion_summary(emotion_results_list):
     emotion_counts = Counter(r["dominant_emotion"] for r in valid_results)
     dominant_overall = emotion_counts.most_common(1)[0][0]
     
-    # Calculate average score
-    avg_score = np.mean([r["score"] for r in valid_results])
-    
     # Calculate percentage distribution
     distribution = {}
-    for emotion, count in Counter(r["interview_label"] for r in valid_results).items():
-        distribution[emotion] = round((count / total_frames) * 100, 1)
+    for label, count in Counter(r["interview_label"] for r in valid_results).items():
+        distribution[label] = round((count / total_frames) * 100, 1)
+
+    # Calculate average score with smoothing logic
+    # Give more weight to consistent performance and ignore outlier low scores
+    scores = [r.get('score', 80) for r in valid_results]
+    scores.sort()
+    # Trim outliers (bottom 10% and top 10% for representative average)
+    trim = max(1, len(scores) // 10)
+    trimmed_scores = scores[trim:-trim] if len(scores) > 10 else scores
+    avg_score = int(np.mean(trimmed_scores))
+    
+    # Updated label mapping for overall summary (using our refined map)
+    label_map = {
+        'happy': 'Confident & Friendly',
+        'neutral': 'Calm & Composed',
+        'surprise': 'Engaged',
+        'sad': 'Low Energy',
+        'angry': 'Stressed',
+        'fear': 'Nervous',
+        'disgust': 'Uncomfortable'
+    }
 
     # Feedback logic
     feedback_map = {
         "happy": "You appeared confident and friendly throughout the interview. Great job!",
-        "neutral": "You maintained a calm and composed expression. Try smiling more to appear friendlier.",
-        "fear": "You appeared nervous during the interview. Practice relaxation techniques before your next interview.",
-        "sad": "You appeared low energy during the interview. Try to show more enthusiasm.",
-        "angry": "You appeared stressed or tense. Try to relax your facial muscles during the interview.",
-        "surprise": "You appeared engaged and attentive. Good energy overall.",
-        "disgust": "You appeared uncomfortable at times. Try to maintain a neutral or positive expression."
+        "neutral": "You maintained a calm and composed expression. This projects stability and professionalism.",
+        "fear": "You appeared slightly nervous. Try to relax your facial muscles and breathe steadily.",
+        "sad": "Your energy level appeared low. Try to show more enthusiasm for the role.",
+        "angry": "You appeared somewhat stressed. Focus on maintaining a relaxed, approachable look.",
+        "surprise": "You appeared highly engaged and attentive. Good energy!",
+        "disgust": "Some expressions appeared uncomfortable. Practice maintaining a neutral, professional mask."
     }
     
-    feedback = feedback_map.get(dominant_overall, "The analysis shows a varied emotional range.")
+    feedback = feedback_map.get(dominant_overall, "You maintained a professional demeanor with a varied emotional range.")
 
     return {
         "dominant_emotion_overall": dominant_overall,
-        "interview_label_overall": EMOTION_MAP.get(dominant_overall, "Varied"),
-        "average_score": int(avg_score),
+        "interview_label_overall": label_map.get(dominant_overall, "Varied"),
+        "average_score": avg_score,
         "emotion_distribution": distribution,
         "total_frames": len(emotion_results_list),
         "feedback": feedback

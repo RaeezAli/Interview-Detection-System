@@ -10,7 +10,6 @@ import time
 import uuid
 import json
 import threading
-import eventlet
 import numpy as np
 from flask import (Flask, render_template, request, redirect,
                    url_for, jsonify, session)
@@ -38,18 +37,22 @@ from utils.helpers import (
 # Config
 from config import Config
 
-eventlet.monkey_patch()
-
 # ──────────────────────────────────────────────
 # APP CONFIGURATION
 # ──────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = Config.SECRET_KEY
+app.secret_key = "interviewai_fixed_secret_key_2025"
 app.config["UPLOAD_FOLDER"] = Config.UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = Config.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 ALLOWED_EXTENSIONS = {"mp4", "avi", "mov", "mkv", "webm"}
 
-socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
+socketio = SocketIO(
+    app,
+    async_mode="threading",
+    cors_allowed_origins="*",
+    logger=False,
+    engineio_logger=False
+)
 
 # Ensure required folders exist
 ensure_folder_exists(app.config["UPLOAD_FOLDER"])
@@ -58,13 +61,7 @@ ensure_folder_exists(app.config["UPLOAD_FOLDER"])
 # GLOBAL STATE
 # ──────────────────────────────────────────────
 analysis_store: dict = {}
-live_analysis_running: bool = False
-live_session_id: str = ""
-live_results: dict = {
-    "gaze_results": [],
-    "emotion_results": [],
-    "posture_results": []
-}
+live_sessions_data: dict = {}  # Keyed by session_id: {gaze: [], emotion: [], posture: [], running: bool}
 
 
 # ──────────────────────────────────────────────
@@ -104,18 +101,28 @@ def process_video_file(video_path: str, session_id: str):
 
             frame_count += 1
 
-            if frame_count % Config.ANALYSIS_FRAME_INTERVAL == 0:
-                gaze_results.append(detect_gaze(frame))
-                emotion_results.append(detect_emotion(frame))
-                posture_results.append(detect_posture(frame))
+            # PERFORMANCE: Skip frames to speed up processing
+            if frame_count % 10 != 0:
+                continue
 
-            progress = round((frame_count / total_frames) * 100, 1) if total_frames > 0 else 0
-            socketio.emit("analysis_progress", {
-                "progress": progress,
-                "current_step": f"Analyzing frame {frame_count} of {total_frames}",
-                "session_id": session_id
-            })
-            eventlet.sleep(0.01)
+            # PERFORMANCE: Resize frame to speed up detector execution
+            frame = cv2.resize(frame, (480, 360))
+
+            gaze_results.append(detect_gaze(frame))
+            emotion_results.append(detect_emotion(frame))
+            posture_results.append(detect_posture(frame))
+
+            # PERFORMANCE: Only emit progress every 10 processed frames (which is every 100 actual frames here, but let's stick to the 10 frames rule for emits too)
+            if frame_count % 10 == 0:
+                progress = round((frame_count / total_frames) * 100, 1) if total_frames > 0 else 0
+                socketio.emit("analysis_progress", {
+                    "progress": progress,
+                    "current_step": f"Analyzing frame {frame_count} of {total_frames}...",
+                    "session_id": session_id
+                })
+            
+            # Small sleep to yield to other threads
+            time.sleep(0.001)
 
         cap.release()
 
@@ -128,8 +135,18 @@ def process_video_file(video_path: str, session_id: str):
         # Speech — extract audio first for better Whisper accuracy
         socketio.emit("analysis_progress", {"progress": 100, "current_step": "Analyzing speech and audio...", "session_id": session_id})
         audio_path = extract_audio_from_video(video_path)
-        speech_input = audio_path if audio_path else video_path
+        
+        # DEBUG: Validate audio extraction success
+        if not audio_path or not os.path.exists(audio_path):
+            print(f"Audio extraction failed for {video_path}. Using video file directly for transcription.")
+            speech_input = video_path  # fallback: pass video directly to whisper
+        else:
+            print(f"Audio extracted successfully: {audio_path}")
+            speech_input = audio_path
+
+        print("Starting speech analysis...")
         speech_analysis = analyze_full_speech(speech_input)
+        print(f"Speech analysis complete: Score: {speech_analysis.get('overall_speech_score')}")
 
         # Confidence score + full report
         socketio.emit("analysis_progress", {"progress": 100, "current_step": "Calculating confidence score...", "session_id": session_id})
@@ -163,47 +180,10 @@ def process_video_file(video_path: str, session_id: str):
 
 
 # ──────────────────────────────────────────────
-# LIVE ANALYSIS FINALIZER
+# LIVE ANALYSIS FINALIZER (REMOVED)
 # ──────────────────────────────────────────────
-def finalize_live_analysis():
-    global live_results, live_session_id
-    try:
-        gaze_results    = live_results["gaze_results"]
-        emotion_results = live_results["emotion_results"]
-        posture_results = live_results["posture_results"]
-
-        gaze_summary    = get_eye_contact_summary(gaze_results)
-        emotion_summary = get_emotion_summary(emotion_results)
-        posture_summary = get_posture_summary(posture_results)
-
-        speech_analysis = {
-            "overall_speech_score": 0,
-            "transcription": "Speech analysis not available for live sessions.",
-            "filler_analysis": {"filler_score": 0, "filler_word_counts": {}, "total_filler_count": 0},
-            "pace_analysis": {
-                "pace_score": 0, "pace_label": "Not analyzed", "words_per_minute": 0,
-                "long_pauses": [], "long_pause_count": 0,
-                "feedback": "Speech analysis requires an uploaded video file."
-            },
-            "clarity_analysis": {"clarity_score": 0, "feedback": "N/A"}
-        }
-
-        interview_duration = len(gaze_results) / 10
-
-        report = generate_full_report(
-            gaze_summary, emotion_summary, posture_summary, speech_analysis,
-            gaze_results, emotion_results, posture_results,
-            interview_duration
-        )
-
-        report["chart_data"]   = prepare_chart_data(report)
-        report["summary_text"] = generate_report_summary_text(report)
-
-        analysis_store[live_session_id] = report
-        socketio.emit("analysis_complete", {"session_id": live_session_id, "redirect": "/report"})
-
-    except Exception as e:
-        socketio.emit("analysis_error", {"error": f"Live analysis finalization failed: {str(e)}"})
+# finalize_live_analysis has been removed as live sessions
+# now follow the same pipeline as recorded videos.
 
 
 # ──────────────────────────────────────────────
@@ -236,10 +216,18 @@ def report():
     if not report_data:
         return redirect(url_for("index"))
 
+    # Pre-serialize chart data for reliable Chart.js ingestion
+    import json
+    chart_data_json = json.dumps(report_data.get("chart_data", {}))
+
+    print("Chart data keys:", report_data.get('chart_data', {}).keys())
+    print("Radar data:", report_data.get('chart_data', {}).get('radar_chart'))
+
     return render_template(
         "report.html",
         report=report_data,
         chart_data=report_data.get("chart_data", {}),
+        chart_data_json=chart_data_json,
         summary_text=report_data.get("summary_text", ""),
         overall_score=report_data["overall"]["score"],
         performance_label=report_data["overall"]["performance_label"],
@@ -255,11 +243,20 @@ def report():
 
 @app.route("/upload", methods=["POST"])
 def upload_video():
-    if "video" not in request.files:
+    # Handle both "video" (from normal form) and "file" (from live recorder FormData)
+    file_key = "video" if "video" in request.files else ("file" if "file" in request.files else None)
+    
+    is_fetch = "application/json" in request.headers.get("Accept", "")
+
+    if not file_key:
+        if is_fetch:
+            return jsonify({"error": "No file"}), 400
         return redirect(url_for("recorded"))
 
-    file = request.files["video"]
+    file = request.files[file_key]
     if file.filename == "":
+        if is_fetch:
+            return jsonify({"error": "No filename"}), 400
         return redirect(url_for("recorded"))
 
     if file and allowed_file(file.filename):
@@ -270,6 +267,7 @@ def upload_video():
         file.save(video_path)
 
         session["session_id"] = session_id
+        session["session_mode"] = "recorded"  # Live sessions now act as recorded ones
 
         thread = threading.Thread(
             target=process_video_file,
@@ -278,8 +276,12 @@ def upload_video():
         )
         thread.start()
 
+        if is_fetch:
+            return jsonify({"redirect": "/loading", "session_id": session_id})
         return redirect(url_for("loading"))
 
+    if is_fetch:
+        return jsonify({"error": "Invalid file type"}), 400
     return "Invalid file type. Allowed: mp4, avi, mov, mkv, webm.", 400
 
 
@@ -296,14 +298,20 @@ def get_report_data():
 
 @app.route("/check_session")
 def check_session():
-    """Checks if an analysis session is currently active."""
+    """Checks if an analysis session is currently active and its status."""
     session_id = session.get("session_id")
     if not session_id:
-        return jsonify({"active": False})
-    # Active if session exists but report isn't ready yet (processing)
-    # OR if report is already done
-    active = session_id is not None
-    return jsonify({"active": active})
+        return jsonify({"active": False, "report_ready": False})
+    
+    report_ready = session_id in analysis_store
+    mode = session.get("session_mode", "recorded")
+    
+    return jsonify({
+        "active": True,
+        "session_id": session_id,
+        "report_ready": report_ready,
+        "mode": mode
+    })
 
 
 @app.route("/clear_session")
@@ -345,66 +353,30 @@ def on_disconnect():
 
 @socketio.on("start_live_analysis")
 def on_start_live(data=None):
-    global live_analysis_running, live_session_id, live_results
     try:
-        live_analysis_running = True
-        live_results = {"gaze_results": [], "emotion_results": [], "posture_results": []}
-        live_session_id = str(uuid.uuid4())
-
-        # Store in Flask session for /report retrieval
-        session["session_id"] = live_session_id
-
-        emit("live_started", {"message": "Live analysis started", "session_id": live_session_id})
-        print(f"[Live] Session started: {live_session_id}")
+        session["session_mode"] = "live"
+        emit("live_started", {"message": "Recording started"})
     except Exception as e:
         emit("analysis_error", {"error": str(e)})
 
 
 @socketio.on("stop_live_analysis")
 def on_stop_live():
-    global live_analysis_running
-    try:
-        live_analysis_running = False
-        emit("live_stopped", {"message": "Live analysis stopped. Processing results..."})
-        thread = threading.Thread(target=finalize_live_analysis, daemon=True)
-        thread.start()
-    except Exception as e:
-        emit("analysis_error", {"error": str(e)})
+    pass # Kept as empty stub for JS compatibility
+
+
+@socketio.on("request_finalize")
+def handle_request_finalize(data):
+    pass # No longer needed, kept as empty stub
 
 
 @socketio.on("live_frame")
 def on_live_frame(data):
-    """Receives base64 webcam frame, runs visual detectors, emits live_stats."""
-    global live_results, live_analysis_running
-    if not live_analysis_running:
-        return
-    try:
-        frame = base64_to_frame(data.get("frame", ""))
-        if frame is None:
-            emit("analysis_error", {"error": "Failed to decode frame."})
-            return
-
-        gaze_result    = detect_gaze(frame)
-        emotion_result = detect_emotion(frame)
-        posture_result = detect_posture(frame)
-
-        live_results["gaze_results"].append(gaze_result)
-        live_results["emotion_results"].append(emotion_result)
-        live_results["posture_results"].append(posture_result)
-
-        emit("live_stats", {
-            "gaze":      gaze_result,
-            "emotion":   emotion_result,
-            "posture":   posture_result,
-            "timestamp": time.time()
-        })
-
-    except Exception as e:
-        emit("analysis_error", {"error": f"Frame processing error: {str(e)}"})
+    pass # Kept as empty stub for JS compatibility
 
 
 # ──────────────────────────────────────────────
 # RUN
 # ──────────────────────────────────────────────
 if __name__ == "__main__":
-    socketio.run(app, debug=Config.FLASK_DEBUG, host="0.0.0.0", port=5000)
+    socketio.run(app, debug=Config.FLASK_DEBUG, host="0.0.0.0", port=5000, allow_unsafe_werkzeug=True, use_reloader=False)

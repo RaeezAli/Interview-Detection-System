@@ -1,0 +1,8 @@
+      .rec-icon i {
+        font-size: 1.5rem;
+        color: #6366f1;
+      }
+      canvas {
+        display: block !important;
+        visibility: visible !important;
+      }

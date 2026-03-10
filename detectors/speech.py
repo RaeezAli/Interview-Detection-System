@@ -5,8 +5,8 @@ import numpy as np
 import whisper
 from collections import Counter
 
-# Load Whisper model (use "base" for speed; switch to "small" or "medium" for better accuracy)
-model = whisper.load_model("base")
+# Load Whisper model (use "tiny" for maximum speed, switch to "base" for slightly better accuracy)
+model = whisper.load_model("tiny")
 
 # Comprehensive filler words list
 FILLER_WORDS = [
@@ -23,13 +23,40 @@ def transcribe_audio(audio_path):
     Returns full text, segments with timestamps, detected language, and duration.
     """
     try:
-        result = model.transcribe(audio_path, verbose=False)
+        # DEBUG: Log transcription start
+        print(f"Transcribing audio: {audio_path}")
         
+        # PERFORMANCE: Use fp16=False for CPU-only systems to avoid warnings/slowness
+        # VERBOSE: Set verbose=True for detailed Whisper logs
+        result = model.transcribe(audio_path, verbose=True, fp16=False)
+        
+        text = result.get("text", "").strip()
+        print(f"Transcription done. Words detected: {len(text.split())}")
+
+        if not text:
+            print("WARNING: Transcription returned empty text.")
+            return {
+                "text": "",
+                "segments": [],
+                "language": "unknown",
+                "duration": 0,
+                "error": "No speech detected in audio"
+            }
+
         # Total duration from last segment's end time
-        duration = result["segments"][-1]["end"] if result["segments"] else 0
+        duration = result["segments"][-1]["end"] if result.get("segments") else 0
+        
+        if duration == 0 and audio_path:
+            # Fallback: use file duration
+            import wave
+            try:
+                with wave.open(audio_path, 'r') as f:
+                    duration = f.getnframes() / f.getframerate()
+            except:
+                duration = 0
 
         return {
-            "text": result.get("text", "").strip(),
+            "text": text,
             "segments": result.get("segments", []),
             "language": result.get("language", "en"),
             "duration": duration
@@ -88,48 +115,68 @@ def detect_filler_words(transcription_text, segments):
 
 
 def analyze_speech_pace(segments, total_duration):
-    """
-    Calculates speech pace (WPM), classifies it, and detects long pauses.
-    """
-    if total_duration <= 0 or not segments:
+    if not segments or total_duration <= 0:
         return {
-            "words_per_minute": 0, "pace_label": "Unavailable",
-            "pace_score": 0, "total_words": 0,
-            "long_pauses": [], "long_pause_count": 0,
-            "feedback": "Unable to analyze pace — no audio segments."
+            "words_per_minute": 0,
+            "pace_label": "Not analyzed",
+            "pace_score": 0,
+            "total_words": 0,
+            "long_pauses": [],
+            "long_pause_count": 0,
+            "feedback": "Speech pace could not be analyzed"
         }
-
-    # Count total words across all segments
-    total_words = sum(len(seg.get("text", "").split()) for seg in segments)
-    wpm = math.ceil((total_words / total_duration) * 60)
-
-    # Pace label and score
-    if wpm < 100:
-        pace_label, pace_score = "Too Slow", 40
-        feedback = "Your speech was too slow. This can make you appear less confident or engaged."
-    elif wpm <= 130:
-        pace_label, pace_score = "Slightly Slow", 75
+    
+    # Count words more accurately from all segments
+    total_words = sum(len(seg.get('text', '').split()) for seg in segments)
+    
+    # Use actual speech duration not total video duration
+    # Calculate actual speaking time by summing segment durations
+    actual_speaking_time = sum(
+        seg.get('end', 0) - seg.get('start', 0) 
+        for seg in segments
+    )
+    
+    # Use actual speaking time if available, otherwise use total duration
+    analysis_duration = actual_speaking_time if actual_speaking_time > 5 else total_duration
+    
+    # Calculate WPM based on actual speaking time
+    wpm = (total_words / analysis_duration) * 60 if analysis_duration > 0 else 0
+    wpm = round(wpm, 1)
+    
+    print(f"Speech pace: {total_words} words in {analysis_duration:.1f}s = {wpm} WPM")
+    
+    # Adjusted thresholds - slightly more lenient for interview context
+    if wpm < 80:
+        pace_label = "Too Slow"
+        pace_score = 40
+        feedback = "Your speech was too slow. Try to speak at a more natural conversational pace."
+    elif wpm < 110:
+        pace_label = "Slightly Slow"
+        pace_score = 75
         feedback = "Your speech was slightly slow. Try to maintain a more natural conversational pace."
-    elif wpm <= 170:
-        pace_label, pace_score = "Normal Pace", 100
+    elif wpm <= 180:
+        pace_label = "Normal Pace"
+        pace_score = 100
         feedback = "Your speech pace was natural and easy to follow."
-    elif wpm <= 200:
-        pace_label, pace_score = "Slightly Fast", 75
+    elif wpm <= 210:
+        pace_label = "Slightly Fast"
+        pace_score = 75
         feedback = "You spoke slightly fast at times. Try to slow down for clarity."
     else:
-        pace_label, pace_score = "Too Fast", 40
-        feedback = "You spoke too fast throughout the interview. Slow down so the interviewer can follow you clearly."
-
-    # Detect long pauses (gaps > 3 seconds between consecutive segments)
+        pace_label = "Too Fast"
+        pace_score = 40
+        feedback = "You spoke too fast throughout the interview. Slow down so the interviewer can follow you."
+    
+    # Detect long pauses between segments
     long_pauses = []
     for i in range(1, len(segments)):
-        gap = segments[i]["start"] - segments[i - 1]["end"]
+        gap = segments[i].get('start', 0) - segments[i-1].get('end', 0)
         if gap > 3.0:
             long_pauses.append({
-                "timestamp": round(segments[i - 1]["end"], 1),
+                "timestamp": round(segments[i-1].get('end', 0), 1),
                 "duration": round(gap, 1)
             })
-
+    
     return {
         "words_per_minute": wpm,
         "pace_label": pace_label,
@@ -193,6 +240,10 @@ def analyze_full_speech(audio_path):
     
     if "error" in transcription:
         return {"error": transcription["error"]}
+
+    print(f"Transcription: '{transcription['text'][:100]}...'")
+    print(f"Segments count: {len(transcription['segments'])}")
+    print(f"Duration: {transcription['duration']}")
 
     text = transcription["text"]
     segments = transcription["segments"]

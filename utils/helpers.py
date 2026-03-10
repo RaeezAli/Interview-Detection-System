@@ -15,13 +15,18 @@ import math
 import re
 import datetime
 from pathlib import Path
+import shutil
+import subprocess
 
+# FFmpeg check
+if not shutil.which('ffmpeg'):
+    print("WARNING: ffmpeg not found...")
 
 # ═══════════════════════════════════════════════════════════════
 # 1. VIDEO UTILITIES
 # ═══════════════════════════════════════════════════════════════
 
-def extract_frames(video_path: str, every_n_frames: int = 3) -> dict | None:
+def extract_frames(video_path: str, every_n_frames: int = 10) -> dict | None:
     """
     Extracts every nth frame from a video file.
 
@@ -82,16 +87,37 @@ def extract_audio_from_video(video_path: str, output_audio_path: str = None) -> 
     Returns:
         str: Path to the extracted audio file, or None on failure.
     """
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    FFMPEG_PATH = os.getenv("FFMPEG_PATH", "ffmpeg")
     if output_audio_path is None:
         output_audio_path = os.path.splitext(video_path)[0] + ".wav"
 
-    command = f'ffmpeg -i "{video_path}" -q:a 0 -map a "{output_audio_path}" -y'
-    result = os.system(command)
-
-    if result == 0 and os.path.exists(output_audio_path):
-        return output_audio_path
-    else:
-        print(f"[extract_audio_from_video] ERROR: ffmpeg failed with code {result}")
+    try:
+        # PERFORMANCE: Use subprocess for better error handling and timeout
+        result = subprocess.run([
+            FFMPEG_PATH, '-i', video_path,
+            '-q:a', '0',
+            '-map', 'a',
+            output_audio_path,
+            '-y'
+        ], capture_output=True, text=True, timeout=60)
+        
+        if result.returncode != 0:
+            print(f"FFmpeg error: {result.stderr}")
+            return None
+        
+        if os.path.exists(output_audio_path):
+            print(f"Audio extracted: {output_audio_path}")
+            return output_audio_path
+        else:
+            return None
+    except subprocess.TimeoutExpired:
+        print("FFmpeg timed out")
+        return None
+    except FileNotFoundError:
+        print("FFmpeg not found - please install ffmpeg")
         return None
 
 
