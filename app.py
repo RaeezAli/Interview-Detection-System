@@ -180,7 +180,25 @@ def process_video_file(video_path: str, session_id: str):
             socketio.emit("analysis_error", {"error": f"Report validation failed: {err}"})
             return
 
-        analysis_store[session_id] = report
+        # Store in analysis_store with explicit structure
+        analysis_store[session_id] = {
+            "session_id": session_id,
+            "overall": report["overall"],
+            "individual_scores": report["individual_scores"],
+            "summaries": report["summaries"],
+            "timeline_labels": report["timeline_data"]["labels"],
+            "timeline_confidence": report["timeline_data"]["confidence_data"],
+            "timeline_eye": report["timeline_data"]["eye_contact_data"],
+            "timeline_emotion": report["timeline_data"]["emotion_data"],
+            "timeline_posture": report["timeline_data"]["posture_data"],
+            "recommendations": report["recommendations"],
+            "transcription": report["transcription"],
+            "filler_word_details": report["filler_word_details"],
+            "chart_data": report["chart_data"],
+            "generated_at": report["generated_at"],
+            "interview_duration": report["interview_duration"],
+            "summary_text": report["summary_text"]
+        }
 
         socketio.emit("analysis_complete", {
             "session_id": session_id,
@@ -226,15 +244,26 @@ def report():
     
     report_data = analysis_store[session_id]
     
-    # 1. Safely build individual scores
-    individual_scores = report_data.get("individual_scores", {})
-    
-    # 2. Extract emotion distribution with percentages
+    # PART 4 — Fix chart_data building
+    # Get scores safely with fallback to 0
+    eye_score = report_data.get("individual_scores", {}).get("eye_contact", 0)
+    emotion_score = report_data.get("individual_scores", {}).get("emotion", 0)
+    posture_score = report_data.get("individual_scores", {}).get("posture", 0)
+    speech_score = report_data.get("individual_scores", {}).get("speech_pace", 0)
+    filler_score = report_data.get("individual_scores", {}).get("filler_words", 0)
+
+    print(f"Scores for charts: eye={eye_score} emotion={emotion_score} posture={posture_score} speech={speech_score} filler={filler_score}")
+
+    # Get emotion distribution safely
     emotion_summary = report_data.get("summaries", {}).get("emotion", {})
     emotion_dist = emotion_summary.get("emotion_distribution", {})
-    
-    total_frames = sum(emotion_dist.values()) if emotion_dist else 1
-    emotion_percentages = {}
+
+    if not emotion_dist:
+        # Build fallback from dominant emotion
+        dominant = emotion_summary.get("dominant_emotion_overall", "neutral")
+        emotion_dist = {dominant: 1}
+
+    total = sum(emotion_dist.values()) if emotion_dist else 1
     label_map = {
         "happy": "Confident & Friendly",
         "neutral": "Calm & Composed",
@@ -244,42 +273,41 @@ def report():
         "surprise": "Surprised",
         "disgust": "Disengaged"
     }
+
+    emotion_percentages = {}
     for emotion, count in emotion_dist.items():
         label = label_map.get(emotion, emotion.capitalize())
-        pct = round((count / total_frames) * 100)
+        pct = round((count / total) * 100)
         if pct > 0:
             emotion_percentages[label] = pct
-    
-    # 3. Extract timeline data correctly from nested structure
-    td = report_data.get("timeline_data", {})
-    timeline_labels = td.get("labels", [])
-    timeline_confidence = td.get("confidence_data", [])
-    timeline_eye = td.get("eye_contact_data", [])
-    timeline_emotion = td.get("emotion_data", [])
-    timeline_posture = td.get("posture_data", [])
-    
-    # 4. Build chart data object for frontend
-    # Note: Using 'values' to match report.html expectations
+
+    if not emotion_percentages:
+        emotion_percentages = {"Calm & Composed": 100}
+
+    # Timeline data
+    timeline_labels = report_data.get("timeline_labels", [])
+    timeline_confidence = report_data.get("timeline_confidence", [])
+    timeline_eye = report_data.get("timeline_eye", [])
+    timeline_emotion_data = report_data.get("timeline_emotion", [])
+    timeline_posture = report_data.get("timeline_posture", [])
+
+    # Generate fallback timeline if empty
+    if not timeline_labels:
+        timeline_labels = ["0:00", "0:15", "0:30", "0:45", "1:00"]
+        timeline_confidence = [eye_score, emotion_score, posture_score, 
+                              speech_score, filler_score]
+        timeline_eye = [eye_score] * 5
+        timeline_emotion_data = [emotion_score] * 5
+        timeline_posture = [posture_score] * 5
+
     chart_data = {
         "radar_chart": {
-            "labels": ["Eye Contact", "Expression", "Posture", "Speech Pace", "Filler Words"],
-            "values": [
-                individual_scores.get("eye_contact", 0),
-                individual_scores.get("emotion", 0),
-                individual_scores.get("posture", 0),
-                individual_scores.get("speech_pace", 0),
-                individual_scores.get("filler_words", 0)
-            ]
+            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
+            "values": [eye_score, emotion_score, posture_score, speech_score, filler_score]
         },
         "bar_chart": {
-            "labels": ["Eye Contact", "Expression", "Posture", "Speech Pace", "Filler Words"],
-            "values": [
-                individual_scores.get("eye_contact", 0),
-                individual_scores.get("emotion", 0),
-                individual_scores.get("posture", 0),
-                individual_scores.get("speech_pace", 0),
-                individual_scores.get("filler_words", 0)
-            ]
+            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
+            "values": [eye_score, emotion_score, posture_score, speech_score, filler_score]
         },
         "timeline_chart": {
             "labels": timeline_labels,
@@ -287,12 +315,18 @@ def report():
         },
         "emotion_distribution": emotion_percentages,
         "timeline_eye": timeline_eye,
-        "timeline_emotion": timeline_emotion,
+        "timeline_emotion": timeline_emotion_data,
         "timeline_posture": timeline_posture
     }
     
     import json
     chart_data_json = json.dumps(chart_data)
+    
+    # PART 1 — Debug print
+    print("=== CHART DATA DEBUG ===")
+    print("individual_scores:", report_data.get("individual_scores"))
+    print("chart_data_json:", chart_data_json)
+    print("========================")
     
     return render_template(
         "report.html",

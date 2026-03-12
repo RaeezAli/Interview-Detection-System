@@ -60,11 +60,11 @@ def calculate_confidence_score(gaze_summary, emotion_summary, posture_summary, s
         "performance_label": performance_label,
         "performance_color": performance_color,
         "individual_scores": {
-            "eye_contact":  eye_contact_score,
-            "emotion":      emotion_score,
-            "posture":      posture_score,
-            "speech_pace":  speech_pace_score,
-            "filler_words": filler_score,
+            "eye_contact":  round(eye_contact_score, 2),
+            "emotion":      round(emotion_score, 2),
+            "posture":      round(posture_score, 2),
+            "speech_pace":  round(speech_pace_score, 2),
+            "filler_words": round(filler_score, 2),
         },
         "weights_used": WEIGHTS
     }
@@ -337,7 +337,7 @@ def generate_full_report(
         "generated_at": generated_at,
         "interview_duration": duration_str,
         "overall": {
-            "score": overall_score,
+            "score": round(overall_score, 2),
             "performance_label": score_data["performance_label"],
             "performance_color": score_data["performance_color"],
         },
