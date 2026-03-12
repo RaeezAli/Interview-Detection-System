@@ -1,67 +1,19 @@
-# Virtual Environments
-venv/
-env/
-.env
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyc
-*.pyo
-*.pyd
-.Python
+venv/
+.env
 
-# Flask
-instance/
-.webassets-cache
-flask_session/
-
-# Uploads and outputs (user data)
-uploads/
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.webm
-*.wav
-*.mp3
-
-# ML Models (too large for GitHub)
+# MediaPipe models
 *.task
-*.h5
-*.pkl
-*.pt
-*.pth
-face_landmarker.task
-*.tflite
 
-# IDE and OS files
-.idea/
+# Uploads and temporary data
+uploads/*
+!uploads/.gitkeep
+
+# IDE and System Files
 .vscode/
-*.swp
-*.swo
+.idea/
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Logs
-*.log
-logs/
-
-# Test files
-test_*.py
-*_test.py
-
-# Jupyter Notebooks
-*.ipynb
-.ipynb_checkpoints/
-
-# Coverage
-.coverage
-htmlcov/
-
-# Distribution
-dist/
-build/
-*.egg-info/

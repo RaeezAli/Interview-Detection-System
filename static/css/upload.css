@@ -1,0 +1,17 @@
+/* Upload Interview Styles */
+
+.upload-icon {
+    color: var(--purple);
+}
+
+.secure-icon {
+    color: var(--green);
+}
+
+.clock-icon {
+    color: var(--blue);
+}
+
+.video-icon {
+    color: var(--purple);
+}

@@ -16,6 +16,10 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/loading.css') }}"
+    />
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   </head>
   <body class="loading-page">
@@ -33,7 +37,7 @@
         </p>
       </div>
 
-      <div id="success-view" style="display: none">
+      <div id="success-view" class="success-view">
         <div class="success-checkmark"><i class="fas fa-check-circle"></i></div>
         <h2>Analysis Complete!</h2>
         <p class="subtitle">Redirecting to your detailed report...</p>
@@ -91,8 +95,8 @@
       </div>
 
       <div class="progress-wrapper">
-        <div class="progress-bar" style="margin-bottom: 0.5rem">
-          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        <div class="progress-bar progress-wrapper-margin">
+          <div class="progress-fill initial-progress" id="progress-fill"></div>
         </div>
         <div class="progress-text">
           <span id="percent-text">0</span>% Complete

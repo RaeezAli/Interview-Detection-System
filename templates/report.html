@@ -21,7 +21,10 @@
       href="{{ url_for('static', filename='css/style.css') }}"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/report.css') }}"
+    />
   </head>
   <!--
   Data attributes carry dynamic values from Flask so report.js
@@ -57,7 +60,7 @@
       <!-- REPORT HEADER -->
       <div class="report-header">
         <h1>
-          <i class="fas fa-chart-bar" style="color: var(--blue)"></i>
+          <i class="fas fa-chart-bar blue-icon"></i>
           Your Interview Analysis Report
         </h1>
         <p>Here is a detailed breakdown of your performance</p>
@@ -99,7 +102,7 @@
 
       <!-- INDIVIDUAL SCORES -->
       <div class="section-title">
-        <i class="fas fa-th-large" style="color: var(--blue)"></i> Category
+        <i class="fas fa-th-large blue-icon"></i> Category
         Scores
       </div>
       <div class="grid-5 mb-25">
@@ -180,36 +183,26 @@
 
       <!-- CHARTS -->
       <div class="section-title">
-        <i class="fas fa-chart-line" style="color: var(--purple)"></i>
+        <i class="fas fa-chart-line purple-icon"></i>
         Performance Analytics
       </div>
       <div class="grid-2 mb-25">
         <div class="card">
-          <p style="font-size: 0.85rem; color: var(--dim); margin-bottom: 1rem">
+          <p class="dim-text-small">
             Radar Overview
           </p>
           <div
-            style="
-              position: relative;
-              height: 300px;
-              width: 100%;
-              min-height: 300px;
-            "
+            class="chart-container"
           >
             <canvas id="radarChart"></canvas>
           </div>
         </div>
         <div class="card">
-          <p style="font-size: 0.85rem; color: var(--dim); margin-bottom: 1rem">
+          <p class="dim-text-small">
             Performance Over Time
           </p>
           <div
-            style="
-              position: relative;
-              height: 300px;
-              width: 100%;
-              min-height: 300px;
-            "
+            class="chart-container"
           >
             <canvas id="lineChart"></canvas>
           </div>
@@ -217,31 +210,21 @@
       </div>
       <div class="grid-2 mb-25">
         <div class="card">
-          <p style="font-size: 0.85rem; color: var(--dim); margin-bottom: 1rem">
+          <p class="dim-text-small">
             Emotion Distribution
           </p>
           <div
-            style="
-              position: relative;
-              height: 300px;
-              width: 100%;
-              min-height: 300px;
-            "
+            class="chart-container"
           >
             <canvas id="emotionChart"></canvas>
           </div>
         </div>
         <div class="card">
-          <p style="font-size: 0.85rem; color: var(--dim); margin-bottom: 1rem">
+          <p class="dim-text-small">
             Score Breakdown
           </p>
           <div
-            style="
-              position: relative;
-              height: 300px;
-              width: 100%;
-              min-height: 300px;
-            "
+            class="chart-container"
           >
             <canvas id="barChart"></canvas>
           </div>
@@ -250,25 +233,20 @@
 
       <!-- FILLER WORDS -->
       <div class="section-title">
-        <i class="fas fa-comment-slash" style="color: var(--yellow)"></i> Filler
+        <i class="fas fa-comment-slash yellow-icon"></i> Filler
         Word Analysis
       </div>
       <div class="card mb-25">
         {% if filler_details and filler_details['total_filler_count'] == 0 %}
         <div
-          style="
-            text-align: center;
-            padding: 2rem;
-            color: var(--green);
-            font-size: 1.1rem;
-          "
+          class="no-filler-empty"
         >
           &#127881; No filler words detected &mdash; excellent speech!
         </div>
         {% elif filler_details and filler_details['filler_word_counts'] %}
-        <p style="color: var(--dim); font-size: 0.85rem; margin-bottom: 1.2rem">
+        <p class="filler-count-label">
           Total filler words detected:
-          <strong style="color: #fff"
+          <strong class="filler-count-value"
             >{{ filler_details['total_filler_count'] }}</strong
           >
         </p>
@@ -286,7 +264,7 @@
             <tr>
               <td><span class="filler-badge">{{ word }}</span></td>
               <td>{{ count }}&times;</td>
-              <td style="color: var(--dim); font-size: 0.82rem">
+              <td class="timestamp-text">
                 {% if filler_details['filler_timestamps'] and word in
                 filler_details['filler_timestamps'] %} {{
                 filler_details['filler_timestamps'][word][:5] | join(", ") }}s
@@ -298,7 +276,7 @@
           </tbody>
         </table>
         {% else %}
-        <div style="text-align: center; padding: 2rem; color: var(--dim)">
+        <div class="no-filler-dim">
           No filler words detected 🎉
         </div>
         {% endif %}
@@ -306,7 +284,7 @@
 
       <!-- RECOMMENDATIONS -->
       <div class="section-title">
-        <i class="fas fa-lightbulb" style="color: var(--yellow)"></i> AI
+        <i class="fas fa-lightbulb yellow-icon"></i> AI
         Recommendations
       </div>
       <div class="mb-25">
@@ -352,36 +330,21 @@
           <button
             onclick="toggleTranscription()"
             id="transcriptBtn"
-            style="
-              background: #333;
-              color: #fff;
-              border: none;
-              padding: 10px 20px;
-              border-radius: 8px;
-              cursor: pointer;
-              margin-bottom: 15px;
-            "
+            class="transcript-btn"
           >
             Show Transcription
           </button>
           <div
             id="transcriptText"
-            style="
-              display: none;
-              background: #1a1a2e;
-              padding: 20px;
-              border-radius: 10px;
-              line-height: 1.8;
-              color: #ccc;
-            "
+            class="transcript-text"
           >
             {{ transcription }}
           </div>
         </div>
         {% else %}
-        <div style="text-align: center; padding: 20px; color: #888">
+        <div class="no-transcript-wrapper">
           <p>📭 No transcription available for this session.</p>
-          <p style="font-size: 0.85rem">
+          <p class="no-transcript-small">
             This may occur if the video has no clear audio or speech recognition
             could not process the file.
           </p>
@@ -389,7 +352,7 @@
         {% endif %}
       </div>
       {% else %}
-      <div style="text-align: center; padding: 50px">
+      <div class="no-report-wrapper">
         <h2>No report data found</h2>
         <a href="/">Go back to home</a>
       </div>
@@ -402,241 +365,7 @@
 
     <script src="{{ url_for('static', filename='js/report.js') }}"></script>
     <script id="chart-data" type="application/json">
-      {{ chart_data | tojson | safe }}
-    </script>
-
-    <script>
-      // Parse data from the JSON script tag - most robust and IDE-friendly method
-      const chartData = JSON.parse(
-        document.getElementById("chart-data").textContent,
-      );
-
-      var RADAR_LABELS = chartData.radar_chart.labels;
-      var RADAR_DATA = chartData.radar_chart.data;
-      var LINE_LABELS = chartData.line_chart.labels;
-      var LINE_DATASETS = chartData.line_chart.datasets;
-      var EMOTION_LABELS = chartData.emotion_pie_chart.labels;
-      var EMOTION_DATA = chartData.emotion_pie_chart.data;
-      var EMOTION_COLORS = chartData.emotion_pie_chart.colors;
-
-      console.log("Chart data loaded via JSON tag:", RADAR_LABELS, RADAR_DATA);
-
-      function initCharts() {
-        console.log("Initializing charts...");
-
-        // Check Chart.js loaded
-        if (typeof Chart === "undefined") {
-          console.error("Chart.js not loaded!");
-          return;
-        }
-        console.log("Chart.js version:", Chart.version);
-
-        // Chart defaults
-        Chart.defaults.color = "#aaaaaa";
-        Chart.defaults.borderColor = "#333333";
-
-        // 1. RADAR CHART
-        try {
-          var radarEl = document.getElementById("radarChart");
-          console.log("Radar canvas:", radarEl);
-          if (radarEl) {
-            var radarCtx = radarEl.getContext("2d");
-            new Chart(radarCtx, {
-              type: "radar",
-              data: {
-                labels: RADAR_LABELS,
-                datasets: [
-                  {
-                    label: "Your Score",
-                    data: RADAR_DATA,
-                    backgroundColor: "rgba(99,102,241,0.25)",
-                    borderColor: "#6366f1",
-                    borderWidth: 2,
-                    pointBackgroundColor: "#6366f1",
-                    pointRadius: 4,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  r: {
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                      stepSize: 20,
-                      color: "#888",
-                      backdropColor: "transparent",
-                    },
-                    grid: { color: "#444" },
-                    angleLines: { color: "#444" },
-                    pointLabels: {
-                      color: "#ccc",
-                      font: { size: 12 },
-                    },
-                  },
-                },
-                plugins: {
-                  legend: { labels: { color: "#ccc" } },
-                },
-              },
-            });
-            console.log("Radar chart created successfully");
-          }
-        } catch (e) {
-          console.error("Radar chart error:", e);
-        }
-
-        // 2. LINE CHART
-        try {
-          var lineEl = document.getElementById("lineChart");
-          if (lineEl) {
-            var colors = ["#6366f1", "#22c55e", "#f59e0b", "#ec4899"];
-            LINE_DATASETS.forEach(function (ds, i) {
-              ds.borderColor = colors[i % colors.length];
-              ds.backgroundColor = "transparent";
-              ds.borderWidth = 2;
-              ds.tension = 0.4;
-              ds.pointRadius = 3;
-              ds.fill = false;
-            });
-            new Chart(lineEl.getContext("2d"), {
-              type: "line",
-              data: {
-                labels: LINE_LABELS,
-                datasets: LINE_DATASETS,
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#888" },
-                    grid: { color: "#444" },
-                  },
-                  x: {
-                    ticks: { color: "#888" },
-                    grid: { color: "#444" },
-                  },
-                },
-                plugins: {
-                  legend: { labels: { color: "#ccc" } },
-                },
-              },
-            });
-            console.log("Line chart created successfully");
-          }
-        } catch (e) {
-          console.error("Line chart error:", e);
-        }
-
-        // 3. EMOTION DOUGHNUT CHART
-        try {
-          var emotionEl = document.getElementById("emotionChart");
-          if (emotionEl) {
-            new Chart(emotionEl.getContext("2d"), {
-              type: "doughnut",
-              data: {
-                labels: EMOTION_LABELS,
-                datasets: [
-                  {
-                    data: EMOTION_DATA,
-                    backgroundColor: EMOTION_COLORS,
-                    borderColor: "#1a1a2e",
-                    borderWidth: 3,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "65%",
-                plugins: {
-                  legend: {
-                    position: "bottom",
-                    labels: {
-                      color: "#ccc",
-                      padding: 15,
-                      font: { size: 11 },
-                    },
-                  },
-                },
-              },
-            });
-            console.log("Emotion chart created successfully");
-          }
-        } catch (e) {
-          console.error("Emotion chart error:", e);
-        }
-
-        // 4. BAR CHART
-        try {
-          var barEl = document.getElementById("barChart");
-          if (barEl) {
-            new Chart(barEl.getContext("2d"), {
-              type: "bar",
-              data: {
-                labels: RADAR_LABELS,
-                datasets: [
-                  {
-                    label: "Score out of 100",
-                    data: RADAR_DATA,
-                    backgroundColor: [
-                      "rgba(99,102,241,0.8)",
-                      "rgba(34,197,94,0.8)",
-                      "rgba(245,158,11,0.8)",
-                      "rgba(236,72,153,0.8)",
-                      "rgba(239,68,68,0.8)",
-                    ],
-                    borderColor: [
-                      "#6366f1",
-                      "#22c55e",
-                      "#f59e0b",
-                      "#ec4899",
-                      "#ef4444",
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 8,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    min: 0,
-                    max: 100,
-                    ticks: { color: "#888" },
-                    grid: { color: "#444" },
-                  },
-                  x: {
-                    ticks: { color: "#888" },
-                    grid: { color: "transparent" },
-                  },
-                },
-                plugins: {
-                  legend: { labels: { color: "#ccc" } },
-                },
-              },
-            });
-            console.log("Bar chart created successfully");
-          }
-        } catch (e) {
-          console.error("Bar chart error:", e);
-        }
-      }
-
-      // Try multiple initialization methods
-      if (document.readyState === "complete") {
-        initCharts();
-      } else {
-        document.addEventListener("DOMContentLoaded", initCharts);
-        window.addEventListener("load", initCharts);
-      }
+        {{ chart_data | tojson | safe }}
     </script>
   </body>
 </html>

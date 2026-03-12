@@ -1,0 +1,13 @@
+/* Analysis Loading Styles */
+
+.success-view {
+    display: none;
+}
+
+.progress-wrapper-margin {
+    margin-bottom: 0.5rem;
+}
+
+.initial-progress {
+    width: 0%;
+}

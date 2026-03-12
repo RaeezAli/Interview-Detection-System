@@ -87,10 +87,7 @@ def extract_audio_from_video(video_path: str, output_audio_path: str = None) -> 
     Returns:
         str: Path to the extracted audio file, or None on failure.
     """
-    from dotenv import load_dotenv
-    load_dotenv()
-    
-    FFMPEG_PATH = os.getenv("FFMPEG_PATH", "ffmpeg")
+    FFMPEG_PATH = r"F:\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"
     if output_audio_path is None:
         output_audio_path = os.path.splitext(video_path)[0] + ".wav"
 

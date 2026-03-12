@@ -135,15 +135,16 @@
     }
 
     /* ── Transcription toggle ──────────────────────────────── */
-    window.toggleTranscription = function() {
+    window.toggleTranscription = function () {
         const text = document.getElementById("transcriptText");
         const btn = document.getElementById("transcriptBtn");
-        if (text.style.display === "none") {
-          text.style.display = "block";
-          btn.textContent = "Hide Transcription";
+        if (!text || !btn) return;
+        if (text.style.display === "none" || text.style.display === "") {
+            text.style.display = "block";
+            btn.textContent = "Hide Transcription";
         } else {
-          text.style.display = "none";
-          btn.textContent = "Show Transcription";
+            text.style.display = "none";
+            btn.textContent = "Show Transcription";
         }
     };
 })();

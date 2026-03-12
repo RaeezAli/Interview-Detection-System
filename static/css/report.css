@@ -1,8 +1,102 @@
-      .rec-icon i {
-        font-size: 1.5rem;
-        color: #6366f1;
-      }
-      canvas {
-        display: block !important;
-        visibility: visible !important;
-      }
+/* Interview Report Styles */
+
+.rec-icon i {
+    font-size: 1.5rem;
+    color: #6366f1;
+}
+
+canvas {
+    display: block !important;
+    visibility: visible !important;
+}
+
+.blue-icon {
+    color: var(--blue);
+}
+
+.purple-icon {
+    color: var(--purple);
+}
+
+.yellow-icon {
+    color: var(--yellow);
+}
+
+.green-icon {
+    color: var(--green);
+}
+
+.dim-text-small {
+    font-size: 0.85rem;
+    color: var(--dim);
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    min-height: 300px;
+}
+
+.no-filler-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--green);
+    font-size: 1.1rem;
+}
+
+.filler-count-label {
+    color: var(--dim);
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+}
+
+.filler-count-value {
+    color: #fff;
+}
+
+.timestamp-text {
+    color: var(--dim);
+    font-size: 0.82rem;
+}
+
+.no-filler-dim {
+    text-align: center;
+    padding: 2rem;
+    color: var(--dim);
+}
+
+.transcript-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.transcript-text {
+    display: none;
+    background: #1a1a2e;
+    padding: 20px;
+    border-radius: 10px;
+    line-height: 1.8;
+    color: #ccc;
+}
+
+.no-transcript-wrapper {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+}
+
+.no-transcript-small {
+    font-size: 0.85rem;
+}
+
+.no-report-wrapper {
+    text-align: center;
+    padding: 50px;
+}
