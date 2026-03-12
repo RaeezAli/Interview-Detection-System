@@ -363,16 +363,18 @@
 
     function initCharts() {
         if (!chartData) {
-            console.error("No chart data available");
+            console.error("No chart data available at all.");
             return;
         }
-        console.log("Initializing charts with data:", chartData);
+        console.log("InterviewAI: Initializing charts with data:", chartData);
         
         // Helper to safely get radar/bar values
         function safeGetValues(key) {
             if (chartData[key] && Array.isArray(chartData[key].values)) {
+                console.log(`Extracting ${key} values:`, chartData[key].values);
                 return chartData[key].values;
             }
+            console.warn(`Chart data for ${key} is missing or invalid. Using zeros.`);
             return [0, 0, 0, 0, 0];
         }
         

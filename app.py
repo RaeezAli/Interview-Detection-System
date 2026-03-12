@@ -226,14 +226,13 @@ def report():
     
     report_data = analysis_store[session_id]
     
-    # Safely build chart data with fallback defaults
+    # 1. Safely build individual scores
     individual_scores = report_data.get("individual_scores", {})
     
-    # Get emotion distribution
+    # 2. Extract emotion distribution with percentages
     emotion_summary = report_data.get("summaries", {}).get("emotion", {})
     emotion_dist = emotion_summary.get("emotion_distribution", {})
     
-    # Convert emotion distribution to percentages
     total_frames = sum(emotion_dist.values()) if emotion_dist else 1
     emotion_percentages = {}
     label_map = {
@@ -251,16 +250,19 @@ def report():
         if pct > 0:
             emotion_percentages[label] = pct
     
-    # Get timeline data
-    timeline_labels = report_data.get("timeline_labels", [])
-    timeline_confidence = report_data.get("timeline_confidence", [])
-    timeline_eye = report_data.get("timeline_eye", [])
-    timeline_emotion = report_data.get("timeline_emotion", [])
-    timeline_posture = report_data.get("timeline_posture", [])
+    # 3. Extract timeline data correctly from nested structure
+    td = report_data.get("timeline_data", {})
+    timeline_labels = td.get("labels", [])
+    timeline_confidence = td.get("confidence_data", [])
+    timeline_eye = td.get("eye_contact_data", [])
+    timeline_emotion = td.get("emotion_data", [])
+    timeline_posture = td.get("posture_data", [])
     
+    # 4. Build chart data object for frontend
+    # Note: Using 'values' to match report.html expectations
     chart_data = {
         "radar_chart": {
-            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
+            "labels": ["Eye Contact", "Expression", "Posture", "Speech Pace", "Filler Words"],
             "values": [
                 individual_scores.get("eye_contact", 0),
                 individual_scores.get("emotion", 0),
@@ -270,7 +272,7 @@ def report():
             ]
         },
         "bar_chart": {
-            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
+            "labels": ["Eye Contact", "Expression", "Posture", "Speech Pace", "Filler Words"],
             "values": [
                 individual_scores.get("eye_contact", 0),
                 individual_scores.get("emotion", 0),
