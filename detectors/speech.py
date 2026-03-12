@@ -19,56 +19,69 @@ FILLER_WORDS = [
 
 def transcribe_audio(audio_path):
     """
-    Transcribes an audio/video file using OpenAI Whisper.
-    Returns full text, segments with timestamps, detected language, and duration.
+    Transcribes audio file using Whisper.
     """
     try:
-        # DEBUG: Log transcription start
-        print(f"Transcribing audio: {audio_path}")
+        if not audio_path or not os.path.exists(audio_path):
+            print("Audio path invalid or file not found")
+            return default_speech_result()
         
-        # PERFORMANCE: Use fp16=False for CPU-only systems to avoid warnings/slowness
-        # VERBOSE: Set verbose=True for detailed Whisper logs
-        result = model.transcribe(audio_path, verbose=True, fp16=False)
+        file_size = os.path.getsize(audio_path)
+        print(f"Transcribing audio file: {file_size} bytes")
+        
+        if file_size < 1000:
+            print("Audio file too small to transcribe")
+            return default_speech_result()
+        
+        print("Loading Whisper model...")
+        # Use existing model loaded at module level
+        
+        print("Starting transcription...")
+        result = model.transcribe(
+            audio_path,
+            fp16=False,
+            language="en",
+            verbose=False,
+            condition_on_previous_text=False,
+            temperature=0.0
+        )
         
         text = result.get("text", "").strip()
-        print(f"Transcription done. Words detected: {len(text.split())}")
-
-        if not text:
-            print("WARNING: Transcription returned empty text.")
-            return {
-                "text": "",
-                "segments": [],
-                "language": "unknown",
-                "duration": 0,
-                "error": "No speech detected in audio"
-            }
-
-        # Total duration from last segment's end time
-        duration = result["segments"][-1]["end"] if result.get("segments") else 0
+        segments = result.get("segments", [])
         
-        if duration == 0 and audio_path:
-            # Fallback: use file duration
-            import wave
-            try:
-                with wave.open(audio_path, 'r') as f:
-                    duration = f.getnframes() / f.getframerate()
-            except:
-                duration = 0
-
+        print(f"Transcription result: '{text[:100]}'")
+        print(f"Number of segments: {len(segments)}")
+        
+        if not text:
+            print("Whisper returned empty transcription")
+            return default_speech_result()
+        
+        # Check detected language if not explicitly provided
+        language = result.get("language", "en")
+        # Duration from segments if available
+        duration = segments[-1]["end"] if segments else 0
+        
         return {
             "text": text,
-            "segments": result.get("segments", []),
-            "language": result.get("language", "en"),
-            "duration": duration
+            "segments": segments,
+            "language": language,
+            "duration": duration,
+            "success": True
         }
+        
     except Exception as e:
-        return {
-            "text": "",
-            "segments": [],
-            "language": "unknown",
-            "duration": 0,
-            "error": f"Transcription failed: {str(e)}"
-        }
+        print(f"Transcription error: {e}")
+        return default_speech_result()
+
+
+def default_speech_result():
+    return {
+        "text": "",
+        "segments": [],
+        "language": "unknown",
+        "duration": 0,
+        "success": False
+    }
 
 
 def detect_filler_words(transcription_text, segments):

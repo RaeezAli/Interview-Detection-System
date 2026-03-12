@@ -14,10 +14,15 @@
     // Start Interview Button
     document.getElementById("start-btn").addEventListener("click", async function() {
         try {
-            // Request webcam and microphone
+            // Request webcam and microphone with high-quality audio settings
             stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 640, height: 480 },
-                audio: true
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100,
+                    channelCount: 1
+                }
             });
             
             // Show video feed
@@ -28,11 +33,22 @@
             // Show LIVE indicator
             document.getElementById("live-badge").style.display = "flex";
             
-            // Start recording using MediaRecorder
+            // Start recording using MediaRecorder - explicitly prefer high-quality audio
             recordedChunks = [];
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: "video/webm;codecs=vp8,opus"
-            });
+            
+            var options;
+            if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+                options = { 
+                    mimeType: "video/webm;codecs=vp8,opus",
+                    audioBitsPerSecond: 128000
+                };
+            } else if (MediaRecorder.isTypeSupported("video/webm")) {
+                options = { mimeType: "video/webm" };
+            } else {
+                options = {};
+            }
+
+            mediaRecorder = new MediaRecorder(stream, options);
             
             mediaRecorder.ondataavailable = function(e) {
                 if (e.data.size > 0) {

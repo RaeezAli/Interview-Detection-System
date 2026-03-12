@@ -74,47 +74,129 @@ def extract_frames(video_path: str, every_n_frames: int = 10) -> dict | None:
     }
 
 
-def extract_audio_from_video(video_path: str, output_audio_path: str = None) -> str | None:
+def extract_audio_from_video(video_path: str) -> str | None:
     """
-    Extracts the audio track from a video file using ffmpeg.
-    NOTE: ffmpeg must be installed and available on the system PATH.
-
-    Args:
-        video_path (str): Path to the input video.
-        output_audio_path (str): Optional output path for the .wav file.
-                                  Auto-generated if not provided.
-
-    Returns:
-        str: Path to the extracted audio file, or None on failure.
+    Extracts audio from video file including webm format using a multi-method fallback approach.
+    Returns path to extracted wav file or None if failed.
     """
-    FFMPEG_PATH = r"F:\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"
-    if output_audio_path is None:
-        output_audio_path = os.path.splitext(video_path)[0] + ".wav"
-
     try:
-        # PERFORMANCE: Use subprocess for better error handling and timeout
-        result = subprocess.run([
-            FFMPEG_PATH, '-i', video_path,
-            '-q:a', '0',
-            '-map', 'a',
-            output_audio_path,
-            '-y'
-        ], capture_output=True, text=True, timeout=60)
+        if not os.path.exists(video_path):
+            print(f"Video file not found: {video_path}")
+            return None
+        
+        # Check file size - if too small audio probably empty
+        file_size = os.path.getsize(video_path)
+        print(f"Video file size: {file_size} bytes")
+        if file_size < 10000:
+            print("Video file too small, likely no audio")
+            return None
+        
+        audio_path = video_path.rsplit(".", 1)[0] + "_audio.wav"
+        
+        # Priority: Hardcoded FFmpeg path from user's system, otherwise environment variable or system PATH
+        ffmpeg_path = r"F:\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"
+        if not os.path.exists(ffmpeg_path):
+            ffmpeg_path = os.getenv("FFMPEG_PATH", "ffmpeg")
+        
+        # Method 1: Standard extraction
+        cmd = [
+            ffmpeg_path,
+            "-i", video_path,
+            "-vn",
+            "-acodec", "pcm_s16le",
+            "-ar", "16000",
+            "-ac", "1",
+            "-y",
+            audio_path
+        ]
+        
+        print(f"Extracting audio from: {video_path}")
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
         
         if result.returncode != 0:
-            print(f"FFmpeg error: {result.stderr}")
-            return None
+            print(f"FFmpeg method 1 failed: {result.stderr}")
+            
+            # Method 2: Force format for webm
+            cmd2 = [
+                ffmpeg_path,
+                "-f", "webm",
+                "-i", video_path,
+                "-vn",
+                "-acodec", "pcm_s16le",
+                "-ar", "16000",
+                "-ac", "1",
+                "-y",
+                audio_path
+            ]
+            
+            result2 = subprocess.run(
+                cmd2,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            if result2.returncode != 0:
+                print(f"FFmpeg method 2 failed: {result2.stderr}")
+                
+                # Method 3: Try converting to mp4 first then extract
+                temp_mp4 = video_path.rsplit(".", 1)[0] + "_temp.mp4"
+                cmd3 = [
+                    ffmpeg_path,
+                    "-i", video_path,
+                    "-c:v", "copy",
+                    "-c:a", "aac",
+                    "-y",
+                    temp_mp4
+                ]
+                
+                result3 = subprocess.run(
+                    cmd3,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                
+                if result3.returncode == 0:
+                    # Now extract audio from mp4
+                    cmd4 = [
+                        ffmpeg_path,
+                        "-i", temp_mp4,
+                        "-vn",
+                        "-acodec", "pcm_s16le",
+                        "-ar", "16000",
+                        "-ac", "1",
+                        "-y",
+                        audio_path
+                    ]
+                    subprocess.run(cmd4, capture_output=True, timeout=60)
+                    
+                    # Cleanup temp mp4
+                    if os.path.exists(temp_mp4):
+                        os.remove(temp_mp4)
         
-        if os.path.exists(output_audio_path):
-            print(f"Audio extracted: {output_audio_path}")
-            return output_audio_path
+        # Verify audio file was created and has content
+        if os.path.exists(audio_path):
+            audio_size = os.path.getsize(audio_path)
+            print(f"Audio extracted successfully: {audio_size} bytes")
+            if audio_size < 1000:
+                print("Audio file too small - likely silent")
+                return None
+            return audio_path
         else:
+            print("Audio extraction failed - no output file created")
             return None
+            
     except subprocess.TimeoutExpired:
-        print("FFmpeg timed out")
+        print("FFmpeg timed out during audio extraction")
         return None
-    except FileNotFoundError:
-        print("FFmpeg not found - please install ffmpeg")
+    except Exception as e:
+        print(f"Audio extraction error: {e}")
         return None
 
 

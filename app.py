@@ -134,18 +134,30 @@ def process_video_file(video_path: str, session_id: str):
 
         # Speech — extract audio first for better Whisper accuracy
         socketio.emit("analysis_progress", {"progress": 100, "current_step": "Analyzing speech and audio...", "session_id": session_id})
+        
+        # After saving uploaded file (tracking progress)
+        print(f"Processing video: {video_path}")
+        print(f"Video file size: {os.path.getsize(video_path)} bytes")
+
         audio_path = extract_audio_from_video(video_path)
         
-        # DEBUG: Validate audio extraction success
-        if not audio_path or not os.path.exists(audio_path):
-            print(f"Audio extraction failed for {video_path}. Using video file directly for transcription.")
-            speech_input = video_path  # fallback: pass video directly to whisper
-        else:
-            print(f"Audio extracted successfully: {audio_path}")
+        # After extract_audio_from_video (tracking results)
+        print(f"Audio extraction result: {audio_path}")
+        if audio_path:
+            print(f"Audio file size: {os.path.getsize(audio_path)} bytes")
             speech_input = audio_path
+        else:
+            print("WARNING: Audio extraction returned None")
+            speech_input = video_path # fallback: pass video directly to whisper
 
         print("Starting speech analysis...")
         speech_analysis = analyze_full_speech(speech_input)
+        
+        # After transcription tracking
+        transcription = speech_analysis.get("transcription", "")
+        print(f"Transcription text length: {len(transcription)}")
+        print(f"Transcription preview: {transcription[:100]}")
+        
         print(f"Speech analysis complete: Score: {speech_analysis.get('overall_speech_score')}")
 
         # Confidence score + full report
