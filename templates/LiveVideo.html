@@ -28,16 +28,7 @@
   </head>
   <body>
     <!-- Notification Toast -->
-    <div id="notificationToast" style="
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: none;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 320px;
-    ">
+    <div id="notificationToast" class="notification-toast-container">
     </div>
 
     <nav>
@@ -66,33 +57,12 @@
           <div class="timer" id="timer">00:00:00</div>
           
           <!-- Mic Level Indicator -->
-          <div style="
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              padding: 8px 12px;
-              background: rgba(255,255,255,0.05);
-              border-radius: 8px;
-              margin-top: 8px;
-              margin-bottom: 12px;
-          ">
-              <span style="color:#aaa; font-size:0.8rem;">🎙 Mic</span>
-              <div style="
-                  flex: 1;
-                  height: 6px;
-                  background: rgba(255,255,255,0.1);
-                  border-radius: 3px;
-                  overflow: hidden;
-              ">
-                  <div id="micLevel" style="
-                      height: 100%;
-                      width: 0%;
-                      background: linear-gradient(90deg, #22c55e, #6366f1);
-                      border-radius: 3px;
-                      transition: width 0.1s ease;
-                  "></div>
+          <div class="mic-level-wrapper">
+              <span class="mic-label">🎙 Mic</span>
+              <div class="mic-bar-container">
+                  <div id="micLevel" class="mic-bar-fill"></div>
               </div>
-              <span id="micStatus" style="color:#aaa; font-size:0.75rem;">Ready</span>
+              <span id="micStatus" class="mic-status">Ready</span>
           </div>
 
           <div class="btn-group">
@@ -164,7 +134,7 @@
     </div>
 
     <!-- Hidden canvas for frame extraction -->
-    <canvas id="capture-canvas" style="display: none"></canvas>
+    <canvas id="capture-canvas" class="hidden-canvas"></canvas>
 
     <script src="{{ url_for('static', filename='js/live.js') }}"></script>
   </body>

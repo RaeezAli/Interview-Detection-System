@@ -4,37 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Interview Report | InterviewAI</title>
-    <meta
-      name="description"
-      content="Detailed AI analysis of your interview performance."
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/report.css') }}"
-    />
+    <meta name="description" content="Detailed AI analysis of your interview performance." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}" />
   </head>
-  <!--
-  Data attributes carry dynamic values from Flask so report.js
-  can read them without any Jinja2 expressions inside <script> tags.
--->
-  <body
-    data-perf-color="{{ performance_color }}"
-    data-overall-score="{{ overall_score }}"
-  >
-    <!-- NAV -->
+  <body data-perf-color="{{ performance_color }}" data-overall-score="{{ overall_score }}">
     <nav>
         <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
         <div class="menu-toggle" id="menuToggle">
@@ -42,38 +18,25 @@
         </div>
         <div class="nav-actions" id="navActions">
           <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
-          <a href="{{ url_for('clear_session') }}">
-            <i class="fas fa-plus"></i> New Interview
-          </a>
-          <a href="#" class="btn-accent" onclick="window.print(); return false;">
-            <i class="fas fa-download"></i> Download PDF
-          </a>
+          <a href="{{ url_for('clear_session') }}"><i class="fas fa-plus"></i> New Interview</a>
+          <a href="#" class="btn-accent" onclick="window.print(); return false;"><i class="fas fa-download"></i> Download PDF</a>
         </div>
     </nav>
 
     <div class="page">
       {% if report %}
-      <!-- REPORT HEADER -->
       <div class="report-header">
-        <h1>
-          <i class="fas fa-chart-bar blue-icon"></i>
-          Your Interview Analysis Report
-        </h1>
+        <h1><i class="fas fa-chart-bar blue-icon"></i> Your Interview Analysis Report</h1>
         <p>Here is a detailed breakdown of your performance</p>
         <div class="meta-row">
           <span><i class="fas fa-calendar-alt"></i> {{ generated_at }}</span>
-          <span
-            ><i class="fas fa-clock"></i> Duration: {{ interview_duration
-            }}</span
-          >
+          <span><i class="fas fa-clock"></i> Duration: {{ duration }}</span>
           <span><i class="fas fa-hashtag"></i> {{ report['report_id'] }}</span>
         </div>
       </div>
 
-      <!-- SUMMARY TEXT -->
       <div class="summary-text">{{ summary_text }}</div>
 
-      <!-- OVERALL SCORE -->
       <div class="card mb-2">
         <div class="score-section">
           <div class="score-circle-wrap">
@@ -85,257 +48,125 @@
           </div>
           <div class="score-info">
             <h2>Overall Confidence Score</h2>
-            <p>
-              Assessed across eye contact, expressions, posture, speech pace,
-              and filler words.
-            </p>
-            <span class="perf-badge perf-{{ performance_color }}"
-              >{{ performance_label }}</span
-            >
+            <p>Assessed across eye contact, expressions, posture, speech pace, and filler words.</p>
+            <span class="perf-badge perf-{{ performance_color }}">{{ performance_label }}</span>
           </div>
         </div>
       </div>
 
-      <!-- INDIVIDUAL SCORES -->
-      <div class="section-title">
-        <i class="fas fa-th-large blue-icon"></i> Category
-        Scores
-      </div>
+      <div class="section-title"><i class="fas fa-th-large blue-icon"></i> Category Scores</div>
       <div class="grid-5 mb-25">
+        {% for key, icon, label in [
+          ('eye_contact', '👁', 'EYE CONTACT'),
+          ('emotion', '😊', 'EXPRESSION'),
+          ('posture', '🧍', 'POSTURE'),
+          ('speech_pace', '🎙', 'SPEECH PACE'),
+          ('filler_words', '🔤', 'FILLER WORDS')
+        ] %}
         <div class="card score-card">
-          <div class="icon">👁</div>
-          <div class="s-val">{{ individual_scores['eye_contact'] }}</div>
-          <div class="s-lbl">EYE CONTACT</div>
+          <div class="icon">{{ icon }}</div>
+          <div class="s-val">{{ individual_scores[key] }}</div>
+          <div class="s-lbl">{{ label }}</div>
           <div class="s-fb">
-            {{ report.summaries['gaze']['feedback'] if report.summaries and
-            'gaze' in report.summaries else '' }}
-          </div>
-          <div class="mini-bar">
-            <div
-              class="mini-fill"
-              data-score="{{ individual_scores['eye_contact'] }}"
-            ></div>
-          </div>
-        </div>
-        <div class="card score-card">
-          <div class="icon">😊</div>
-          <div class="s-val">{{ individual_scores['emotion'] }}</div>
-          <div class="s-lbl">EXPRESSION</div>
-          <div class="s-fb">
-            {{ report.summaries['emotion']['feedback'] if report.summaries and
-            'emotion' in report.summaries else '' }}
-          </div>
-          <div class="mini-bar">
-            <div
-              class="mini-fill"
-              data-score="{{ individual_scores['emotion'] }}"
-            ></div>
-          </div>
-        </div>
-        <div class="card score-card">
-          <div class="icon">🧍</div>
-          <div class="s-val">{{ individual_scores['posture'] }}</div>
-          <div class="s-lbl">POSTURE</div>
-          <div class="s-fb">
-            {{ report.summaries['posture']['feedback'] if report.summaries and
-            'posture' in report.summaries else '' }}
-          </div>
-          <div class="mini-bar">
-            <div
-              class="mini-fill"
-              data-score="{{ individual_scores['posture'] }}"
-            ></div>
-          </div>
-        </div>
-        <div class="card score-card">
-          <div class="icon">🎙</div>
-          <div class="s-val">{{ individual_scores['speech_pace'] }}</div>
-          <div class="s-lbl">SPEECH PACE</div>
-          <div class="s-fb">
-            {{ report.summaries['speech']['pace_analysis']['feedback'] if
-            report.summaries and 'speech' in report.summaries and
-            'pace_analysis' in report.summaries['speech'] else '' }}
-          </div>
-          <div class="mini-bar">
-            <div
-              class="mini-fill"
-              data-score="{{ individual_scores['speech_pace'] }}"
-            ></div>
-          </div>
-        </div>
-        <div class="card score-card">
-          <div class="icon">🔤</div>
-          <div class="s-val">{{ individual_scores['filler_words'] }}</div>
-          <div class="s-lbl">FILLER WORDS</div>
-          <div class="s-fb"></div>
-          <div class="mini-bar">
-            <div
-              class="mini-fill"
-              data-score="{{ individual_scores['filler_words'] }}"
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CHARTS -->
-      <div class="section-title">
-        <i class="fas fa-chart-line purple-icon"></i>
-        Performance Analytics
-      </div>
-      <div class="grid-2 mb-25">
-        <!-- Radar Overview -->
-        <div class="card chart-card">
-          <p class="chart-label">Radar Overview</p>
-          <div style="position:relative; height:280px; width:100%;">
-            <canvas id="radarChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Performance Over Time -->
-        <div class="card chart-card">
-          <p class="chart-label">Performance Over Time</p>
-          <div style="position:relative; height:280px; width:100%;">
-            <canvas id="timelineChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid-2 mb-25">
-        <!-- Emotion Distribution -->
-        <div class="card chart-card">
-          <p class="chart-label">Emotion Distribution</p>
-          <div style="position:relative; height:280px; width:100%;">
-            <canvas id="emotionChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Score Breakdown -->
-        <div class="card chart-card">
-          <p class="chart-label">Score Breakdown</p>
-          <div style="position:relative; height:280px; width:100%;">
-            <canvas id="barChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- FILLER WORDS -->
-      <div class="section-title">
-        <i class="fas fa-comment-slash yellow-icon"></i> Filler
-        Word Analysis
-      </div>
-      <div class="card mb-25">
-        {% if filler_details and filler_details['total_filler_count'] == 0 %}
-        <div
-          class="no-filler-empty"
-        >
-          &#127881; No filler words detected &mdash; excellent speech!
-        </div>
-        {% elif filler_details and filler_details['filler_word_counts'] %}
-        <p class="filler-count-label">
-          Total filler words detected:
-          <strong class="filler-count-value"
-            >{{ filler_details['total_filler_count'] }}</strong
-          >
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Filler Word</th>
-              <th>Count</th>
-              <th>Approx. Timestamps</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for word, count in filler_details['filler_word_counts'].items()
-            %}
-            <tr>
-              <td><span class="filler-badge">{{ word }}</span></td>
-              <td>{{ count }}&times;</td>
-              <td class="timestamp-text">
-                {% if filler_details['filler_timestamps'] and word in
-                filler_details['filler_timestamps'] %} {{
-                filler_details['filler_timestamps'][word][:5] | join(", ") }}s
-                {% if filler_details['filler_timestamps'][word] | length > 5 %}
-                ...{% endif %} {% else %}â€”{% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="no-filler-dim">
-          No filler words detected 🎉
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- RECOMMENDATIONS -->
-      <div class="section-title">
-        <i class="fas fa-lightbulb yellow-icon"></i> AI
-        Recommendations
-      </div>
-      <div class="mb-25">
-        {% if recommendations %} {% for rec in recommendations %}
-        <div class="rec-card">
-          <div class="rec-icon">
-            {% if rec['category'] == "Eye Contact" %}<i class="fas fa-eye"></i>
-            {% elif rec['category'] == "Posture" %}<i class="fas fa-user"></i>
-            {% elif rec['category'] == "Speech Pace" %}<i
-              class="fas fa-microphone"
-            ></i>
-            {% elif rec['category'] == "Filler Words" %}<i
-              class="fas fa-comment"
-            ></i>
-            {% elif rec['category'] == "Expression" %}<i
-              class="fas fa-smile"
-            ></i>
-            {% else %}<i class="fas fa-star"></i>
+            {% if key == 'speech_pace' %}
+              {{ report.summaries['speech']['pace_analysis']['feedback'] if report.summaries and 'speech' in report.summaries and 'pace_analysis' in report.summaries['speech'] else '' }}
+            {% elif key != 'filler_words' %}
+              {{ report.summaries[key.replace('eye_contact','gaze')]['feedback'] if report.summaries and key.replace('eye_contact','gaze') in report.summaries else '' }}
             {% endif %}
           </div>
-          <div class="rec-body">
-            <h4>
-              {{ rec['title'] }}
-              <span class="priority-badge p-{{ rec['priority'] | lower }}"
-                >{{ rec['priority'] }}</span
-              >
-              <span class="rec-cat">{{ rec['category'] }}</span>
-            </h4>
-            <p>{{ rec['description'] }}</p>
+          <div class="mini-bar">
+            <div class="mini-fill" data-score="{{ individual_scores[key] }}"></div>
           </div>
         </div>
-        {% endfor %} {% else %}
-        <p>No recommendations available</p>
+        {% endfor %}
+      </div>
+
+      <div class="section-title"><i class="fas fa-chart-line purple-icon"></i> Performance Analytics</div>
+      <div class="grid-2 mb-25">
+        <div class="card chart-card">
+          <p class="chart-label">Radar Overview</p>
+          <div class="chart-container"><canvas id="radarChart"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <p class="chart-label">Performance Over Time</p>
+          <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2 mb-25">
+        <div class="card chart-card">
+          <p class="chart-label">Emotion Distribution</p>
+          <div class="chart-container"><canvas id="emotionChart"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <p class="chart-label">Metric Comparison</p>
+          <div class="chart-container"><canvas id="barChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="section-title"><i class="fas fa-comment-slash yellow-icon"></i> Filler Word Analysis</div>
+      <div class="card mb-25">
+        {% if filler_details and filler_details['total_filler_count'] == 0 %}
+          <div class="no-filler-empty">&#127881; No filler words detected &mdash; excellent speech!</div>
+        {% elif filler_details and filler_details['filler_word_counts'] %}
+          <p class="filler-count-label">Total filler words detected: <strong class="filler-count-value">{{ filler_details['total_filler_count'] }}</strong></p>
+          <table>
+            <thead><tr><th>Filler Word</th><th>Count</th><th>Approx. Timestamps</th></tr></thead>
+            <tbody>
+              {% for word, count in filler_details['filler_word_counts'].items() %}
+              <tr>
+                <td><span class="filler-badge">{{ word }}</span></td>
+                <td>{{ count }}&times;</td>
+                <td class="timestamp-text">
+                  {% if filler_details['filler_timestamps'] and word in filler_details['filler_timestamps'] %}
+                    {{ filler_details['filler_timestamps'][word][:5] | join(", ") }}s{% if filler_details['filler_timestamps'][word] | length > 5 %}...{% endif %}
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="no-filler-dim">No filler words detected 🎉</div>
         {% endif %}
       </div>
 
-      <!-- TRANSCRIPTION -->
+      <div class="section-title"><i class="fas fa-lightbulb yellow-icon"></i> AI Recommendations</div>
+      <div class="mb-25">
+        {% if recommendations %}
+          {% for rec in recommendations %}
+          <div class="rec-card">
+            <div class="rec-icon">
+              {% if rec['category'] == "Eye Contact" %}<i class="fas fa-eye"></i>
+              {% elif rec['category'] == "Posture" %}<i class="fas fa-user"></i>
+              {% elif rec['category'] == "Speech Pace" %}<i class="fas fa-microphone"></i>
+              {% elif rec['category'] == "Filler Words" %}<i class="fas fa-comment"></i>
+              {% elif rec['category'] == "Expression" %}<i class="fas fa-smile"></i>
+              {% else %}<i class="fas fa-star"></i>
+              {% endif %}
+            </div>
+            <div class="rec-body">
+              <h4>{{ rec['title'] }} <span class="priority-badge p-{{ rec['priority'] | lower }}">{{ rec['priority'] }}</span> <span class="rec-cat">{{ rec['category'] }}</span></h4>
+              <p>{{ rec['description'] }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p>No recommendations available</p>
+        {% endif %}
+      </div>
+
       <div class="transcription-section">
         <h3>📄 Interview Transcription</h3>
-        {% if transcription and transcription != "Speech analysis not available
-        for live sessions" and transcription|length > 5 %}
-        <div class="transcription-toggle">
-          <button
-            onclick="toggleTranscription()"
-            id="transcriptBtn"
-            class="transcript-btn"
-          >
-            Show Transcription
-          </button>
-          <div
-            id="transcriptText"
-            class="transcript-text"
-          >
-            {{ transcription }}
+        {% if transcription and transcription != "Speech analysis not available for live sessions" and transcription|length > 5 %}
+          <div class="transcription-toggle">
+            <button onclick="toggleTranscription()" id="transcriptBtn" class="transcript-btn">Show Transcription</button>
+            <div id="transcriptText" class="transcript-text">{{ transcription }}</div>
           </div>
-        </div>
         {% else %}
-        <div class="no-transcript-wrapper">
-          <p>📭 No transcription available for this session.</p>
-          <p class="no-transcript-small">
-            This may occur if the video has no clear audio or speech recognition
-            could not process the file.
-          </p>
-        </div>
+          <div class="no-transcript-wrapper">
+            <p>📭 No transcription available for this session.</p>
+            <p class="no-transcript-small">This may occur if the video has no clear audio or speech recognition could not process the file.</p>
+          </div>
         {% endif %}
       </div>
       {% else %}
@@ -346,342 +177,14 @@
       {% endif %}
     </div>
 
-    <footer>
-      InterviewAI &copy; &mdash; AI-Powered Interview Performance Analysis
-    </footer>
+    <footer>InterviewAI &copy; &mdash; AI-Powered Interview Performance Analysis</footer>
 
-    <!-- Chart.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
+    <script id="chart-data" type="application/json">{{ chart_data_json | safe }}</script>
     <script>
-    var chartData = {{ chart_data_json | safe }};
-    console.log("Chart data loaded:", chartData);
-    console.log("Radar values:", chartData.radar_chart ? chartData.radar_chart.data : "MISSING");
-    console.log("Bar values:", chartData.doughnut_chart ? chartData.doughnut_chart.data : "MISSING");
-
-    function initCharts() {
-        if (!chartData) {
-            console.error("No chart data available at all.");
-            return;
-        }
-        console.log("InterviewAI: Initializing charts with data:", chartData);
-        
-        // ── OVERALL SCORE DOUGHNUT ──────────────
-        var doughnutEl = document.getElementById("doughnutChart");
-        if (doughnutEl) {
-            if (doughnutEl._chartInstance) doughnutEl._chartInstance.destroy();
-            var score = parseInt(document.body.getAttribute("data-overall-score")) || 0;
-            var perfColor = document.body.getAttribute("data-perf-color") || "blue";
-            
-            // Map perf-color name to actual hex
-            var colorMap = { "green": "#10b981", "yellow": "#f59e0b", "red": "#ef4444", "blue": "#3b82f6" };
-            var themeColor = colorMap[perfColor] || "#3b82f6";
-
-            var doughnutChart = new Chart(doughnutEl, {
-                type: "doughnut",
-                data: {
-                    datasets: [{
-                        data: [score, 100 - score],
-                        backgroundColor: [themeColor, "rgba(255,255,255,0.05)"],
-                        borderWidth: 0,
-                        circumference: 360,
-                        rotation: 0
-                    }]
-                },
-                options: {
-                    cutout: "85%",
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
-                }
-            });
-            doughnutEl._chartInstance = doughnutChart;
-            console.log("Overall score doughnut created");
-        }
-
-        // Helper to safely get radar/bar values
-        function safeGetValues(key) {
-            if (chartData[key] && Array.isArray(chartData[key].data)) {
-                console.log(`Extracting ${key} data:`, chartData[key].data);
-                return chartData[key].data;
-            }
-            console.warn(`Chart data for ${key} is missing or invalid. Using zeros.`);
-            return [0, 0, 0, 0, 0];
-        }
-        
-        // ── RADAR CHART ──────────────────────────
-        var radarEl = document.getElementById("radarChart");
-        if (radarEl) {
-            if (radarEl._chartInstance) radarEl._chartInstance.destroy();
-            var radarValues = safeGetValues("radar_chart");
-            var radarChart = new Chart(radarEl, {
-                type: "radar",
-                data: {
-                    labels: [
-                        "Eye Contact",
-                        "Expression",
-                        "Posture",
-                        "Speech Pace",
-                        "Filler Words"
-                    ],
-                    datasets: [{
-                        label: "Your Score",
-                        data: chartData.radar_chart.data || [0, 0, 0, 0, 0],
-                        backgroundColor: "rgba(99,102,241,0.25)",
-                        borderColor: "#6366f1",
-                        borderWidth: 2,
-                        pointBackgroundColor: "#6366f1",
-                        pointBorderColor: "#fff",
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            min: 0,
-                            max: 100,
-                            ticks: {
-                                stepSize: 20,
-                                color: "#888",
-                                backdropColor: "transparent",
-                                font: { size: 10 }
-                            },
-                            grid: { color: "rgba(255,255,255,0.08)" },
-                            angleLines: { color: "rgba(255,255,255,0.08)" },
-                            pointLabels: {
-                                color: "#ccc",
-                                font: { size: 11 }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { color: "#ccc" }
-                        }
-                    }
-                }
-            });
-            radarEl._chartInstance = radarChart;
-            console.log("Radar chart created");
-        }
-
-        // ── TIMELINE CHART ───────────────────────
-        var timelineEl = document.getElementById("timelineChart");
-        if (timelineEl) {
-            if (timelineEl._chartInstance) timelineEl._chartInstance.destroy();
-            
-            var tc = chartData.line_chart || {};
-            var timelineLabels = tc.labels || [];
-            var timelineValues = tc.confidence || []; // Fallback for confidence line
-            var datasets = tc.datasets || [];
-            
-            // Generate fallback data if empty
-            if (timelineLabels.length === 0) {
-                timelineLabels = ["0:00", "0:15", "0:30", "0:45", "1:00"];
-                timelineValues = [75, 78, 72, 80, 76];
-            }
-            
-            var timelineChart = new Chart(timelineEl, {
-                type: "line",
-                data: {
-                    labels: timelineLabels,
-                    datasets: datasets.length > 0 ? datasets : [
-                        {
-                            label: "Eye Contact",
-                            data: [70, 75, 80, 75, 70],
-                            borderColor: "#6366f1",
-                            backgroundColor: "transparent",
-                            borderWidth: 2,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            ticks: { color: "#888", stepSize: 20 },
-                            grid: { color: "rgba(255,255,255,0.08)" }
-                        },
-                        x: {
-                            ticks: { color: "#888" },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { 
-                                color: "#ccc",
-                                boxWidth: 12,
-                                font: { size: 11 }
-                            }
-                        }
-                    }
-                }
-            });
-            timelineEl._chartInstance = timelineChart;
-            console.log("Timeline chart created");
-        }
-
-        // ── EMOTION DONUT CHART ──────────────────
-        var emotionEl = document.getElementById("emotionChart");
-        if (emotionEl) {
-            if (emotionEl._chartInstance) emotionEl._chartInstance.destroy();
-            
-            // Get emotion distribution from Flask data
-            var emotionPie = chartData.emotion_pie_chart || {};
-            var emotionLabels = emotionPie.labels || ["No Data"];
-            var emotionValues = emotionPie.data || [100];
-            var emotionColors = emotionPie.colors || ["#6366f1"];
-            
-            var emotionChart = new Chart(emotionEl, {
-                type: "doughnut",
-                data: {
-                    labels: emotionLabels,
-                    datasets: [{
-                        data: emotionValues,
-                        backgroundColor: emotionColors,
-                        borderColor: "#1a1a2e",
-                        borderWidth: 3,
-                        hoverOffset: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: "65%",
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: "bottom",
-                            labels: {
-                                color: "#ccc",
-                                boxWidth: 12,
-                                padding: 10,
-                                font: { size: 11 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ctx.label + ": " + ctx.parsed + "%";
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            emotionEl._chartInstance = emotionChart;
-            console.log("Emotion donut chart created");
-        }
-
-        // ── BAR CHART ────────────────────────────
-        var barEl = document.getElementById("barChart");
-        if (barEl) {
-            if (barEl._chartInstance) barEl._chartInstance.destroy();
-            var barData = chartData.doughnut_chart ? chartData.doughnut_chart.data : [0,0,0,0,0];
-            var barColors = chartData.doughnut_chart ? chartData.doughnut_chart.colors : ["#6366f1","#22c55e","#f59e0b","#ec4899","#ef4444"];
-            
-            var barChart = new Chart(barEl, {
-                type: "bar",
-                data: {
-                    labels: [
-                        "Eye Contact",
-                        "Expression",
-                        "Posture",
-                        "Speech Pace",
-                        "Filler Words"
-                    ],
-                    datasets: [{
-                        label: "Your Score",
-                        data: barData,
-                        backgroundColor: barColors,
-                        borderRadius: 8,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            ticks: {
-                                color: "#888",
-                                stepSize: 20
-                            },
-                            grid: { color: "rgba(255,255,255,0.08)" }
-                        },
-                        x: {
-                            ticks: { color: "#ccc" },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: { color: "#ccc" }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ctx.parsed.y + "/100";
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            barEl._chartInstance = barChart;
-            console.log("Bar chart created");
-        }
-    }
-
-    // Initialize after page loads
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initCharts);
-    } else {
-        initCharts();
-    }
-
-    // Mobile menu toggle
-    var menuToggle = document.getElementById("menuToggle");
-    var navActions = document.getElementById("navActions");
-    if (menuToggle && navActions) {
-        menuToggle.addEventListener("click", function() {
-            navActions.classList.toggle("active");
-            var icon = menuToggle.querySelector("i");
-            if (navActions.classList.contains("active")) {
-                icon.classList.replace("fa-bars", "fa-times");
-            } else {
-                icon.classList.replace("fa-times", "fa-bars");
-            }
-        });
-    }
-
-    // Toggle transcription function
-    function toggleTranscription() {
-        var text = document.getElementById("transcriptText");
-        var btn = document.getElementById("transcriptBtn");
-        if (text.style.display === "none" || text.style.display === "") {
-            text.style.display = "block";
-            btn.textContent = "Hide Transcription";
-        } else {
-            text.style.display = "none";
-            btn.textContent = "Show Transcription";
-        }
-    }
+      // Safe data parsing to avoid IDE syntax errors with Jinja2
+      const chartData = JSON.parse(document.getElementById('chart-data').textContent);
     </script>
+    <script src="{{ url_for('static', filename='js/report.js') }}"></script>
   </body>
 </html>

@@ -5,12 +5,12 @@
 (function () {
     const socket = io({ transports: ["websocket", "polling"] });
 
-    var mediaRecorder;
-    var recordedChunks = [];
-    var stream;
-    var timerInterval;
-    var seconds = 0;
-    var shownNotifications = [];
+    let mediaRecorder;
+    let recordedChunks = [];
+    let stream;
+    let timerInterval;
+    let seconds = 0;
+    let shownNotifications = [];
 
     // Start Interview Button
     document.getElementById("start-btn").addEventListener("click", async function() {
@@ -30,7 +30,7 @@
             startMicLevelMonitor(stream);
             
             // Show video feed
-            var videoEl = document.getElementById("webcam");
+            let videoEl = document.getElementById("webcam");
             videoEl.srcObject = stream;
             videoEl.play();
             
@@ -41,7 +41,7 @@
             recordedChunks = [];
             shownNotifications = []; // Reset notifications
             
-            var options;
+            let options;
             if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
                 options = { 
                     mimeType: "video/webm;codecs=vp8,opus",
@@ -63,7 +63,7 @@
             
             mediaRecorder.onstop = function() {
                 // When recording stops, create blob and upload
-                var blob = new Blob(recordedChunks, { type: "video/webm" });
+                let blob = new Blob(recordedChunks, { type: "video/webm" });
                 uploadRecordedVideo(blob);
             };
             
@@ -128,8 +128,8 @@
 
     // Upload recorded video to Flask
     function uploadRecordedVideo(blob) {
-        var formData = new FormData();
-        var filename = "live_interview_" + Date.now() + ".webm";
+        let formData = new FormData();
+        let filename = "live_interview_" + Date.now() + ".webm";
         formData.append("video", blob, filename); 
         
         // Show uploading status
@@ -165,15 +165,15 @@
     }
 
     function updateOverlayText(text) {
-        var el = document.getElementById("overlayText");
+        let el = document.getElementById("overlayText");
         if (el) el.textContent = text;
     }
 
     function updateTimer() {
         seconds++;
-        var h = String(Math.floor(seconds / 3600)).padStart(2, "0");
-        var m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-        var s = String(seconds % 60).padStart(2, "0");
+        let h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+        let m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+        let s = String(seconds % 60).padStart(2, "0");
         document.getElementById("timer").textContent = `${h}:${m}:${s}`;
     }
 
@@ -182,13 +182,13 @@
         type = type || "info";
         duration = duration || 4000;
         
-        var container = document.getElementById("notificationToast");
+        let container = document.getElementById("notificationToast");
         if (!container) return;
         
-        var toast = document.createElement("div");
+        let toast = document.createElement("div");
         toast.className = "toast-notification " + type;
         
-        var icons = {
+        let icons = {
             "info": "💡",
             "warning": "⚠️",
             "success": "✅",
@@ -215,7 +215,7 @@
     }
 
     // ── SCHEDULED NOTIFICATIONS DURING RECORDING ────
-    var notificationSchedule = [
+    let notificationSchedule = [
         { time: 5,  message: "Interview started! Speak clearly and look at the camera.", type: "success" },
         { time: 15, message: "Tip: Maintain eye contact with the camera lens for a confident look.", type: "tip" },
         { time: 30, message: "Reminder: Sit up straight and keep your shoulders relaxed.", type: "tip" },
@@ -243,22 +243,22 @@
     // ── MICROPHONE LEVEL INDICATOR ───────────────────
     function startMicLevelMonitor(stream) {
         try {
-            var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            var analyser = audioContext.createAnalyser();
-            var microphone = audioContext.createMediaStreamSource(stream);
+            let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            let analyser = audioContext.createAnalyser();
+            let microphone = audioContext.createMediaStreamSource(stream);
             microphone.connect(analyser);
             analyser.fftSize = 256;
             
-            var dataArray = new Uint8Array(analyser.frequencyBinCount);
-            var micBar = document.getElementById("micLevel");
+            let dataArray = new Uint8Array(analyser.frequencyBinCount);
+            let micBar = document.getElementById("micLevel");
             
             function updateMicLevel() {
                 analyser.getByteFrequencyData(dataArray);
-                var average = dataArray.reduce(function(a, b) { 
+                let average = dataArray.reduce(function(a, b) { 
                     return a + b; 
                 }, 0) / dataArray.length;
                 
-                var level = Math.min(100, average * 3); // Multiplier for sensitivity
+                let level = Math.min(100, average * 3); // Multiplier for sensitivity
                 
                 if (micBar) micBar.style.width = level + "%";
                 
@@ -287,10 +287,10 @@
 
     // Lightweight client-side only indicators
     function startClientSideIndicators() {
-        var eyeLabels = ["Looking at Camera", "Looking at Camera", "Looking at Camera", "Looking Left", "Looking Right"];
-        var exprLabels = ["Calm & Composed", "Confident & Friendly", "Calm & Composed", "Engaged", "Calm & Composed"];
-        var postLabels = ["Good Posture", "Good Posture", "Mild Slouching", "Good Posture", "Excellent Posture"];
-        var tips = [
+        let eyeLabels = ["Looking at Camera", "Looking at Camera", "Looking at Camera", "Looking Left", "Looking Right"];
+        let exprLabels = ["Calm & Composed", "Confident & Friendly", "Calm & Composed", "Engaged", "Calm & Composed"];
+        let postLabels = ["Good Posture", "Good Posture", "Mild Slouching", "Good Posture", "Excellent Posture"];
+        let tips = [
             "Maintain eye contact with the camera",
             "Speak clearly and at a steady pace",
             "Keep your shoulders back and sit upright",
@@ -298,24 +298,24 @@
             "Take a breath before answering questions"
         ];
         
-        var confidence = 75;
+        let confidence = 75;
         
         setInterval(function() {
             // Randomly update indicators to show activity
-            var eyeEl = document.getElementById("stat-gaze");
-            var dotGaze = document.getElementById("dot-gaze");
-            var exprEl = document.getElementById("stat-emotion");
-            var postEl = document.getElementById("stat-posture");
-            var confEl = document.getElementById("score-text");
-            var confBar = document.getElementById("score-fill");
-            var tipEl = document.getElementById("tip-text");
+            let eyeEl = document.getElementById("stat-gaze");
+            let dotGaze = document.getElementById("dot-gaze");
+            let exprEl = document.getElementById("stat-emotion");
+            let postEl = document.getElementById("stat-posture");
+            let confEl = document.getElementById("score-text");
+            let confBar = document.getElementById("score-fill");
+            let tipEl = document.getElementById("tip-text");
             
             if (eyeEl) {
-                var eyeVal = eyeLabels[Math.floor(Math.random() * eyeLabels.length)];
+                let eyeVal = eyeLabels[Math.floor(Math.random() * eyeLabels.length)];
                 eyeEl.textContent = eyeVal;
             }
             if (dotGaze) {
-                var isLooking = (eyeEl && eyeEl.textContent === "Looking at Camera");
+                let isLooking = (eyeEl && eyeEl.textContent === "Looking at Camera");
                 dotGaze.className = "indicator-dot " + (isLooking ? "dot-green" : "dot-red");
             }
             
@@ -324,7 +324,7 @@
             
             confidence += (Math.random() - 0.5) * 5;
             confidence = Math.max(70, Math.min(95, confidence));
-            var confRounded = Math.round(confidence);
+            let confRounded = Math.round(confidence);
             
             if (confEl) confEl.textContent = confRounded + "%";
             if (confBar) confBar.style.width = confRounded + "%";

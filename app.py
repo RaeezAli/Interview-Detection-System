@@ -31,7 +31,8 @@ from utils.helpers import (
     validate_report_data,
     ensure_folder_exists,
     cleanup_old_files,
-    base64_to_frame
+    base64_to_frame,
+    format_duration
 )
 
 # Config
@@ -186,7 +187,8 @@ def process_video_file(video_path: str, session_id: str):
             "session_id": session_id,
             "overall": {
                 "score": report["overall"]["score"],
-                "performance_label": report["overall"]["performance_label"]
+                "performance_label": report["overall"]["performance_label"],
+                "performance_color": report["overall"]["performance_color"]
             },
             "individual_scores": {
                 "eye_contact": report["individual_scores"]["eye_contact"],
@@ -211,7 +213,7 @@ def process_video_file(video_path: str, session_id: str):
             "filler_word_details": report["filler_word_details"],
             "chart_data": report["chart_data"],
             "timestamp": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
-            "duration": duration_str,
+            "duration": format_duration(interview_duration),
             "generated_at": report["generated_at"],
             "interview_duration": report["interview_duration"],
             "summary_text": report["summary_text"]
@@ -284,7 +286,9 @@ def report():
         individual_scores=report_data["individual_scores"],
         recommendations=report_data["recommendations"],
         filler_details=report_data.get("filler_word_details", {}),
-        transcription=report_data.get("transcription", "")
+        transcription=report_data.get("transcription", ""),
+        duration=report_data.get("interview_duration") or report_data.get("duration") or "00:00",
+        generated_at=report_data.get("generated_at", "")
     )
 
 

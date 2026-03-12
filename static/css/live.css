@@ -113,7 +113,57 @@
     }
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+/* ── NOTIFICATION CONTAINER ────────────────────── */
+.notification-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+}
+
+/* ── MIC LEVEL INDICATOR ───────────────────────── */
+.mic-level-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+.mic-label {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+.mic-bar-container {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mic-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #6366f1);
+    border-radius: 3px;
+    transition: width 0.1s ease;
+}
+
+.mic-status {
+    color: #aaa;
+    font-size: 0.75rem;
+}
+
+/* ── HIDDEN UTILITIES ──────────────────────────── */
+.hidden-canvas {
+    display: none;
 }
