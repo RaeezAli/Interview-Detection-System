@@ -25,9 +25,6 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/report.css') }}"
     />
-    <!-- PDF Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </head>
   <!--
   Data attributes carry dynamic values from Flask so report.js
@@ -58,8 +55,7 @@
       </div>
     </nav>
 
-    <div id="mainReportContent">
-      <div class="page">
+    <div class="page">
       {% if report %}
       <!-- REPORT HEADER -->
       <div class="report-header">
@@ -76,31 +72,6 @@
           >
           <span><i class="fas fa-hashtag"></i> {{ report['report_id'] }}</span>
         </div>
-      </div>
-
-      <!-- PDF Export Button -->
-      <div style="text-align: center; margin: 20px 0;">
-          <button id="exportPdfBtn" onclick="exportReportAsPDF()" style="
-              background: linear-gradient(135deg, #6366f1, #8b5cf6);
-              color: white;
-              border: none;
-              padding: 12px 30px;
-              border-radius: 25px;
-              font-size: 1rem;
-              font-weight: 600;
-              cursor: pointer;
-              display: inline-flex;
-              align-items: center;
-              gap: 10px;
-              box-shadow: 0 4px 15px rgba(99,102,241,0.4);
-              transition: all 0.3s ease;
-          ">
-              <i class="fas fa-file-pdf"></i>
-              Export Full Report as PDF
-          </button>
-          <p style="color:#888; font-size:0.8rem; margin-top:8px;">
-              Includes all charts, scores, and recommendations
-          </p>
       </div>
 
       <!-- SUMMARY TEXT -->
@@ -216,40 +187,37 @@
         Performance Analytics
       </div>
       <div class="grid-2 mb-25">
-        <div class="card">
-          <p class="dim-text-small">
-            Radar Overview
-          </p>
-          <div style="position:relative; height:300px; width:100%;">
+        <!-- Radar Overview -->
+        <div class="card chart-card">
+          <p class="chart-label">Radar Overview</p>
+          <div style="position:relative; height:280px; width:100%;">
             <canvas id="radarChart"></canvas>
           </div>
         </div>
-        <div class="card">
-          <p class="dim-text-small">
-            Performance Over Time
-          </p>
-          <div style="position:relative; height:250px; width:100%;">
+
+        <!-- Performance Over Time -->
+        <div class="card chart-card">
+          <p class="chart-label">Performance Over Time</p>
+          <div style="position:relative; height:280px; width:100%;">
             <canvas id="timelineChart"></canvas>
           </div>
         </div>
       </div>
+
       <div class="grid-2 mb-25">
-        <div class="card">
-          <p class="dim-text-small">
-            Score Breakdown
-          </p>
-          <div style="position:relative; height:300px; width:100%;">
-            <canvas id="barChart"></canvas>
+        <!-- Emotion Distribution -->
+        <div class="card chart-card">
+          <p class="chart-label">Emotion Distribution</p>
+          <div style="position:relative; height:280px; width:100%;">
+            <canvas id="emotionChart"></canvas>
           </div>
         </div>
-        <div class="card">
-          <p class="dim-text-small">
-            Summary Tips
-          </p>
-          <div class="summary-tips-clean">
-            <p><strong>Eye Contact:</strong> Maintain steady gaze at the lens.</p>
-            <p><strong>Speech:</strong> Keep fillers under 3 per minute.</p>
-            <p><strong>Posture:</strong> Sit upright and stay centered.</p>
+
+        <!-- Score Breakdown -->
+        <div class="card chart-card">
+          <p class="chart-label">Score Breakdown</p>
+          <div style="position:relative; height:280px; width:100%;">
+            <canvas id="barChart"></canvas>
           </div>
         </div>
       </div>
@@ -381,7 +349,6 @@
       </div>
       {% endif %}
     </div>
-    </div>
 
     <footer>
       InterviewAI &copy; &mdash; AI-Powered Interview Performance Analysis
@@ -391,178 +358,316 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
     <script>
-    // Chart data injected from Flask
+    // Inject Flask data
     var chartData = {{ chart_data_json | safe }};
 
-    // Wait for DOM and Chart.js to be ready
-    document.addEventListener("DOMContentLoaded", function() {
+    function initCharts() {
+        console.log("Initializing charts with data:", chartData);
         
-        // Destroy any existing charts first to prevent conflicts
-        Chart.helpers.each(Chart.instances, function(instance) {
-            instance.destroy();
-        });
-        
-        // ── RADAR CHART ──────────────────────────────
-        var radarCanvas = document.getElementById("radarChart");
-        if (radarCanvas && chartData.radar_chart) {
-            try {
-                new Chart(radarCanvas.getContext("2d"), {
-                    type: "radar",
-                    data: {
-                        labels: chartData.radar_chart.labels,
-                        datasets: [{
-                            label: "Performance",
-                            data: chartData.radar_chart.values,
-                            backgroundColor: "rgba(99,102,241,0.2)",
-                            borderColor: "#6366f1",
-                            borderWidth: 2,
-                            pointBackgroundColor: "#6366f1",
-                            pointRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                min: 0,
-                                max: 100,
-                                ticks: {
-                                    stepSize: 20,
-                                    color: "#888",
-                                    font: { size: 10 }
-                                },
-                                grid: { color: "rgba(255,255,255,0.1)" },
-                                pointLabels: {
-                                    color: "#ccc",
-                                    font: { size: 11 }
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
-                });
-                console.log("Radar chart rendered successfully");
-            } catch(e) {
-                console.error("Radar chart error:", e);
-            }
-        } else {
-            console.warn("radarChart canvas not found or no data");
-        }
-        
-        // ── BAR CHART ────────────────────────────────
-        var barCanvas = document.getElementById("barChart");
-        if (barCanvas && chartData.bar_chart) {
-            try {
-                new Chart(barCanvas.getContext("2d"), {
-                    type: "bar",
-                    data: {
-                        labels: chartData.bar_chart.labels,
-                        datasets: [{
-                            label: "Score",
-                            data: chartData.bar_chart.values,
-                            backgroundColor: chartData.bar_chart.colors,
-                            borderRadius: 8,
-                            borderSkipped: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                min: 0,
-                                max: 100,
-                                ticks: {
-                                    color: "#888",
-                                    stepSize: 20
-                                },
-                                grid: { color: "rgba(255,255,255,0.1)" }
+        // ── RADAR CHART ──────────────────────────
+        var radarEl = document.getElementById("radarChart");
+        if (radarEl) {
+            if (radarEl._chartInstance) radarEl._chartInstance.destroy();
+            var radarChart = new Chart(radarEl, {
+                type: "radar",
+                data: {
+                    labels: [
+                        "Eye Contact",
+                        "Expression",
+                        "Posture",
+                        "Speech Pace",
+                        "Filler Words"
+                    ],
+                    datasets: [{
+                        label: "Your Score",
+                        data: [
+                            chartData.radar_chart.values[0] || 0,
+                            chartData.radar_chart.values[1] || 0,
+                            chartData.radar_chart.values[2] || 0,
+                            chartData.radar_chart.values[3] || 0,
+                            chartData.radar_chart.values[4] || 0
+                        ],
+                        backgroundColor: "rgba(99,102,241,0.25)",
+                        borderColor: "#6366f1",
+                        borderWidth: 2,
+                        pointBackgroundColor: "#6366f1",
+                        pointBorderColor: "#fff",
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20,
+                                color: "#888",
+                                backdropColor: "transparent",
+                                font: { size: 10 }
                             },
-                            x: {
-                                ticks: { color: "#ccc" },
-                                grid: { display: false }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(ctx) {
-                                        return ctx.parsed.y + "/100";
-                                    }
-                                }
+                            grid: { color: "rgba(255,255,255,0.08)" },
+                            angleLines: { color: "rgba(255,255,255,0.08)" },
+                            pointLabels: {
+                                color: "#ccc",
+                                font: { size: 11 }
                             }
                         }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: "#ccc" }
+                        }
                     }
-                });
-                console.log("Bar chart rendered successfully");
-            } catch(e) {
-                console.error("Bar chart error:", e);
-            }
-        } else {
-            console.warn("barChart canvas not found or no data");
-        }
-        
-        // ── TIMELINE CHART ───────────────────────────
-        var timelineCanvas = document.getElementById("timelineChart");
-        if (timelineCanvas && chartData.timeline_chart) {
-            try {
-                var timelineLabels = chartData.timeline_chart.labels;
-                var timelineValues = chartData.timeline_chart.confidence;
-                
-                // If no timeline data generate dummy smooth data
-                if (!timelineLabels || timelineLabels.length === 0) {
-                    timelineLabels = ["0s", "15s", "30s", "45s", "60s"];
-                    timelineValues = [70, 75, 72, 80, 78];
                 }
-                
-                new Chart(timelineCanvas.getContext("2d"), {
-                    type: "line",
-                    data: {
-                        labels: timelineLabels,
-                        datasets: [{
+            });
+            radarEl._chartInstance = radarChart;
+            console.log("Radar chart created");
+        } else {
+            console.error("radarChart canvas not found!");
+        }
+
+        // ── TIMELINE CHART ───────────────────────
+        var timelineEl = document.getElementById("timelineChart");
+        if (timelineEl) {
+            if (timelineEl._chartInstance) timelineEl._chartInstance.destroy();
+            
+            var timelineLabels = chartData.timeline_chart.labels;
+            var timelineValues = chartData.timeline_chart.confidence;
+            
+            // Generate fallback data if empty
+            if (!timelineLabels || timelineLabels.length === 0) {
+                timelineLabels = ["0:00", "0:15", "0:30", "0:45", "1:00"];
+                timelineValues = [75, 78, 72, 80, 76];
+            }
+            
+            var timelineChart = new Chart(timelineEl, {
+                type: "line",
+                data: {
+                    labels: timelineLabels,
+                    datasets: [
+                        {
+                            label: "Eye Contact",
+                            data: chartData.timeline_eye || timelineValues,
+                            borderColor: "#6366f1",
+                            backgroundColor: "transparent",
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "Expression",
+                            data: chartData.timeline_emotion || timelineValues,
+                            borderColor: "#22c55e",
+                            backgroundColor: "transparent",
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3
+                        },
+                        {
+                            label: "Posture",
+                            data: chartData.timeline_posture || timelineValues,
+                            borderColor: "#f59e0b",
+                            backgroundColor: "transparent",
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3
+                        },
+                        {
                             label: "Confidence",
                             data: timelineValues,
-                            borderColor: "#6366f1",
-                            backgroundColor: "rgba(99,102,241,0.1)",
+                            borderColor: "#ec4899",
+                            backgroundColor: "rgba(236,72,153,0.1)",
                             borderWidth: 2,
-                            fill: true,
                             tension: 0.4,
-                            pointBackgroundColor: "#6366f1",
+                            fill: true,
                             pointRadius: 3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                min: 0,
-                                max: 100,
-                                ticks: { color: "#888" },
-                                grid: { color: "rgba(255,255,255,0.1)" }
-                            },
-                            x: {
-                                ticks: { color: "#ccc" },
-                                grid: { display: false }
-                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: "#888", stepSize: 20 },
+                            grid: { color: "rgba(255,255,255,0.08)" }
                         },
-                        plugins: {
-                            legend: { display: false }
+                        x: {
+                            ticks: { color: "#888" },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { 
+                                color: "#ccc",
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
                         }
                     }
-                });
-                console.log("Timeline chart rendered successfully");
-            } catch(e) {
-                console.error("Timeline chart error:", e);
-            }
+                }
+            });
+            timelineEl._chartInstance = timelineChart;
+            console.log("Timeline chart created");
         } else {
-            console.warn("timelineChart canvas not found or no data");
+            console.error("timelineChart canvas not found!");
         }
-    });
+
+        // ── EMOTION DONUT CHART ──────────────────
+        var emotionEl = document.getElementById("emotionChart");
+        if (emotionEl) {
+            if (emotionEl._chartInstance) emotionEl._chartInstance.destroy();
+            
+            // Get emotion distribution from Flask data
+            var emotionDist = chartData.emotion_distribution || {
+                "Confident & Friendly": 60,
+                "Calm & Composed": 25,
+                "Nervous": 10,
+                "Stressed": 3,
+                "Low Energy": 2
+            };
+            
+            var emotionLabels = Object.keys(emotionDist);
+            var emotionValues = Object.values(emotionDist);
+            var emotionColors = [
+                "#22c55e",
+                "#6366f1", 
+                "#f59e0b",
+                "#ef4444",
+                "#8b5cf6"
+            ];
+            
+            var emotionChart = new Chart(emotionEl, {
+                type: "doughnut",
+                data: {
+                    labels: emotionLabels,
+                    datasets: [{
+                        data: emotionValues,
+                        backgroundColor: emotionColors,
+                        borderColor: "#1a1a2e",
+                        borderWidth: 3,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "65%",
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "bottom",
+                            labels: {
+                                color: "#ccc",
+                                boxWidth: 12,
+                                padding: 10,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.label + ": " + ctx.parsed + "%";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            emotionEl._chartInstance = emotionChart;
+            console.log("Emotion donut chart created");
+        } else {
+            console.error("emotionChart canvas not found!");
+        }
+
+        // ── BAR CHART ────────────────────────────
+        var barEl = document.getElementById("barChart");
+        if (barEl) {
+            if (barEl._chartInstance) barEl._chartInstance.destroy();
+            var barChart = new Chart(barEl, {
+                type: "bar",
+                data: {
+                    labels: [
+                        "Eye Contact",
+                        "Expression",
+                        "Posture",
+                        "Speech Pace",
+                        "Filler Words"
+                    ],
+                    datasets: [{
+                        label: "Your Score",
+                        data: [
+                            chartData.bar_chart.values[0] || 0,
+                            chartData.bar_chart.values[1] || 0,
+                            chartData.bar_chart.values[2] || 0,
+                            chartData.bar_chart.values[3] || 0,
+                            chartData.bar_chart.values[4] || 0
+                        ],
+                        backgroundColor: [
+                            "#6366f1",
+                            "#22c55e",
+                            "#f59e0b",
+                            "#ec4899",
+                            "#ef4444"
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                color: "#888",
+                                stepSize: 20
+                            },
+                            grid: { color: "rgba(255,255,255,0.08)" }
+                        },
+                        x: {
+                            ticks: { color: "#ccc" },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: "#ccc" }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.parsed.y + "/100";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            barEl._chartInstance = barChart;
+            console.log("Bar chart created");
+        } else {
+            console.error("barChart canvas not found!");
+        }
+    }
+
+    // Initialize after page loads
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCharts);
+    } else {
+        initCharts();
+    }
 
     // Toggle transcription function
     function toggleTranscription() {
@@ -574,110 +679,6 @@
         } else {
             text.style.display = "none";
             btn.textContent = "Show Transcription";
-        }
-    }
-
-    // ── PDF EXPORT LOGIC ──────────────────────────
-    async function exportReportAsPDF() {
-        var btn = document.getElementById("exportPdfBtn");
-        var originalText = btn.innerHTML;
-        
-        // Show loading state
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
-        btn.disabled = true;
-        
-        try {
-            var { jsPDF } = window.jspdf;
-            var pdf = new jsPDF("p", "mm", "a4");
-            
-            var pageWidth = pdf.internal.pageSize.getWidth();
-            var pageHeight = pdf.internal.pageSize.getHeight();
-            var margin = 10;
-            var contentWidth = pageWidth - (margin * 2);
-            
-            var mainContent = document.getElementById("mainReportContent");
-            
-            if (mainContent) {
-                // Temporarily hide export button during capture
-                btn.style.display = "none";
-                
-                await captureAndAddToPDF(mainContent, pdf, margin, pageWidth, pageHeight, contentWidth);
-                
-                // Restore button
-                btn.style.display = "inline-flex";
-            } else {
-                await captureAndAddToPDF(document.body, pdf, margin, pageWidth, pageHeight, contentWidth);
-            }
-            
-            // Generate filename with date
-            var dateStr = new Date().toISOString().slice(0,10);
-            var filename = "InterviewAI_Report_" + dateStr + ".pdf";
-            
-            pdf.save(filename);
-            
-            btn.innerHTML = '<i class="fas fa-check"></i> PDF Downloaded!';
-            setTimeout(function() {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 3000);
-            
-        } catch(err) {
-            console.error("PDF export error:", err);
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Export Failed';
-            btn.disabled = false;
-            setTimeout(function() {
-                btn.innerHTML = originalText;
-            }, 3000);
-        }
-    }
-
-    async function captureAndAddToPDF(element, pdf, margin, pageWidth, pageHeight, contentWidth) {
-        var canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#0f0f1a",
-            logging: false,
-            windowWidth: 1200
-        });
-        
-        var imgData = canvas.toDataURL("image/jpeg", 0.95);
-        var imgWidth = contentWidth;
-        var imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        var remainingHeight = imgHeight;
-        var sourceY = 0;
-        var isFirstPage = true;
-        
-        while (remainingHeight > 0) {
-            if (!isFirstPage) {
-                pdf.addPage();
-            }
-            
-            var availableHeight = pageHeight - (margin * 2);
-            var sliceHeight = Math.min(remainingHeight, availableHeight);
-            
-            var sourceSliceHeight = (sliceHeight / imgHeight) * canvas.height;
-            
-            var sliceCanvas = document.createElement("canvas");
-            sliceCanvas.width = canvas.width;
-            sliceCanvas.height = sourceSliceHeight;
-            
-            var sliceCtx = sliceCanvas.getContext("2d");
-            sliceCtx.drawImage(
-                canvas,
-                0, sourceY,
-                canvas.width, sourceSliceHeight,
-                0, 0,
-                canvas.width, sourceSliceHeight
-            );
-            
-            var sliceData = sliceCanvas.toDataURL("image/jpeg", 0.95);
-            pdf.addImage(sliceData, "JPEG", margin, margin, imgWidth, sliceHeight);
-            
-            sourceY += sourceSliceHeight;
-            remainingHeight -= sliceHeight;
-            isFirstPage = false;
         }
     }
     </script>

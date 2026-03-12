@@ -1,7 +1,7 @@
 flask
 flask-socketio
 opencv-python
-mediapipe==0.10.9
+mediapipe==0.10.32
 deepface
 fer==22.5.1
 openai-whisper

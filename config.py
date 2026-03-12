@@ -17,4 +17,3 @@ class Config:
     WHISPER_MODEL        = os.getenv("WHISPER_MODEL", "base")
     ANALYSIS_FRAME_INTERVAL = int(os.getenv("ANALYSIS_FRAME_INTERVAL", 3))
     CLEANUP_AFTER_HOURS  = int(os.getenv("CLEANUP_AFTER_HOURS", 24))
-    FFMPEG_PATH          = os.getenv("FFMPEG_PATH", "ffmpeg")

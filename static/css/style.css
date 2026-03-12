@@ -1,3 +1,34 @@
+/* ── CUSTOM SCROLLBAR ─────────────────────── */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f0f1a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6366f1, #8b5cf6);
+    border-radius: 10px;
+    border: 2px solid #0f0f1a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #818cf8, #a78bfa);
+}
+
+::-webkit-scrollbar-corner {
+    background: #0f0f1a;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #6366f1 #0f0f1a;
+}
+
 /* ============================================================
    InterviewAI — Global Stylesheet
    static/css/style.css

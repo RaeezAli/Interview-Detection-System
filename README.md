@@ -149,9 +149,3 @@ Interview-Detection-System/
 - **GPU Acceleration**: MediaPipe and FER benefit from a CUDA-enabled GPU.
 - **Whisper Model**: The `base` model is used by default. Adjust in code if needed for higher accuracy.
 - **Refactored Assets**: All inline CSS and JS have been moved to the `static/` directory to improve maintainability and page load speeds.
-
----
-
-## 🛡 License
-
-Distributed under the MIT License. See `LICENSE` for more information.

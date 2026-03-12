@@ -229,15 +229,38 @@ def report():
     # Safely build chart data with fallback defaults
     individual_scores = report_data.get("individual_scores", {})
     
+    # Get emotion distribution
+    emotion_summary = report_data.get("summaries", {}).get("emotion", {})
+    emotion_dist = emotion_summary.get("emotion_distribution", {})
+    
+    # Convert emotion distribution to percentages
+    total_frames = sum(emotion_dist.values()) if emotion_dist else 1
+    emotion_percentages = {}
+    label_map = {
+        "happy": "Confident & Friendly",
+        "neutral": "Calm & Composed",
+        "fear": "Nervous",
+        "sad": "Stressed",
+        "angry": "Low Energy",
+        "surprise": "Surprised",
+        "disgust": "Disengaged"
+    }
+    for emotion, count in emotion_dist.items():
+        label = label_map.get(emotion, emotion.capitalize())
+        pct = round((count / total_frames) * 100)
+        if pct > 0:
+            emotion_percentages[label] = pct
+    
+    # Get timeline data
+    timeline_labels = report_data.get("timeline_labels", [])
+    timeline_confidence = report_data.get("timeline_confidence", [])
+    timeline_eye = report_data.get("timeline_eye", [])
+    timeline_emotion = report_data.get("timeline_emotion", [])
+    timeline_posture = report_data.get("timeline_posture", [])
+    
     chart_data = {
         "radar_chart": {
-            "labels": [
-                "Eye Contact",
-                "Expression", 
-                "Posture",
-                "Speech Pace",
-                "Filler Words"
-            ],
+            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
             "values": [
                 individual_scores.get("eye_contact", 0),
                 individual_scores.get("emotion", 0),
@@ -247,32 +270,23 @@ def report():
             ]
         },
         "bar_chart": {
-            "labels": [
-                "Eye Contact",
-                "Expression",
-                "Posture", 
-                "Speech Pace",
-                "Filler Words"
-            ],
+            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
             "values": [
                 individual_scores.get("eye_contact", 0),
                 individual_scores.get("emotion", 0),
                 individual_scores.get("posture", 0),
                 individual_scores.get("speech_pace", 0),
                 individual_scores.get("filler_words", 0)
-            ],
-            "colors": [
-                "#6366f1",
-                "#8b5cf6",
-                "#06b6d4",
-                "#10b981",
-                "#f59e0b"
             ]
         },
         "timeline_chart": {
-            "labels": report_data.get("timeline_labels", []),
-            "confidence": report_data.get("timeline_confidence", [])
-        }
+            "labels": timeline_labels,
+            "confidence": timeline_confidence
+        },
+        "emotion_distribution": emotion_percentages,
+        "timeline_eye": timeline_eye,
+        "timeline_emotion": timeline_emotion,
+        "timeline_posture": timeline_posture
     }
     
     import json
