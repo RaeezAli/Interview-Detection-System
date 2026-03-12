@@ -100,3 +100,25 @@ canvas {
     text-align: center;
     padding: 50px;
 }
+
+@media print {
+    /* Hide navigation and export button when printing */
+    nav, .nav-actions, #exportPdfBtn { display: none !important; }
+    
+    /* Ensure charts are visible */
+    canvas { 
+        max-width: 100% !important;
+    }
+    
+    /* Dark background for print consistency */
+    body {
+        background: #0f0f1a !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    /* Page breaks for sections */
+    .grid-5, .grid-2, .recommendations-section { 
+        page-break-inside: avoid; 
+    }
+}

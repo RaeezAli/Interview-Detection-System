@@ -25,6 +25,9 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/report.css') }}"
     />
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </head>
   <!--
   Data attributes carry dynamic values from Flask so report.js
@@ -55,7 +58,8 @@
       </div>
     </nav>
 
-    <div class="page">
+    <div id="mainReportContent">
+      <div class="page">
       {% if report %}
       <!-- REPORT HEADER -->
       <div class="report-header">
@@ -72,6 +76,31 @@
           >
           <span><i class="fas fa-hashtag"></i> {{ report['report_id'] }}</span>
         </div>
+      </div>
+
+      <!-- PDF Export Button -->
+      <div style="text-align: center; margin: 20px 0;">
+          <button id="exportPdfBtn" onclick="exportReportAsPDF()" style="
+              background: linear-gradient(135deg, #6366f1, #8b5cf6);
+              color: white;
+              border: none;
+              padding: 12px 30px;
+              border-radius: 25px;
+              font-size: 1rem;
+              font-weight: 600;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 10px;
+              box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+              transition: all 0.3s ease;
+          ">
+              <i class="fas fa-file-pdf"></i>
+              Export Full Report as PDF
+          </button>
+          <p style="color:#888; font-size:0.8rem; margin-top:8px;">
+              Includes all charts, scores, and recommendations
+          </p>
       </div>
 
       <!-- SUMMARY TEXT -->
@@ -352,6 +381,7 @@
       </div>
       {% endif %}
     </div>
+    </div>
 
     <footer>
       InterviewAI &copy; &mdash; AI-Powered Interview Performance Analysis
@@ -544,6 +574,110 @@
         } else {
             text.style.display = "none";
             btn.textContent = "Show Transcription";
+        }
+    }
+
+    // ── PDF EXPORT LOGIC ──────────────────────────
+    async function exportReportAsPDF() {
+        var btn = document.getElementById("exportPdfBtn");
+        var originalText = btn.innerHTML;
+        
+        // Show loading state
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+        btn.disabled = true;
+        
+        try {
+            var { jsPDF } = window.jspdf;
+            var pdf = new jsPDF("p", "mm", "a4");
+            
+            var pageWidth = pdf.internal.pageSize.getWidth();
+            var pageHeight = pdf.internal.pageSize.getHeight();
+            var margin = 10;
+            var contentWidth = pageWidth - (margin * 2);
+            
+            var mainContent = document.getElementById("mainReportContent");
+            
+            if (mainContent) {
+                // Temporarily hide export button during capture
+                btn.style.display = "none";
+                
+                await captureAndAddToPDF(mainContent, pdf, margin, pageWidth, pageHeight, contentWidth);
+                
+                // Restore button
+                btn.style.display = "inline-flex";
+            } else {
+                await captureAndAddToPDF(document.body, pdf, margin, pageWidth, pageHeight, contentWidth);
+            }
+            
+            // Generate filename with date
+            var dateStr = new Date().toISOString().slice(0,10);
+            var filename = "InterviewAI_Report_" + dateStr + ".pdf";
+            
+            pdf.save(filename);
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> PDF Downloaded!';
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 3000);
+            
+        } catch(err) {
+            console.error("PDF export error:", err);
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Export Failed';
+            btn.disabled = false;
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+            }, 3000);
+        }
+    }
+
+    async function captureAndAddToPDF(element, pdf, margin, pageWidth, pageHeight, contentWidth) {
+        var canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#0f0f1a",
+            logging: false,
+            windowWidth: 1200
+        });
+        
+        var imgData = canvas.toDataURL("image/jpeg", 0.95);
+        var imgWidth = contentWidth;
+        var imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        var remainingHeight = imgHeight;
+        var sourceY = 0;
+        var isFirstPage = true;
+        
+        while (remainingHeight > 0) {
+            if (!isFirstPage) {
+                pdf.addPage();
+            }
+            
+            var availableHeight = pageHeight - (margin * 2);
+            var sliceHeight = Math.min(remainingHeight, availableHeight);
+            
+            var sourceSliceHeight = (sliceHeight / imgHeight) * canvas.height;
+            
+            var sliceCanvas = document.createElement("canvas");
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sourceSliceHeight;
+            
+            var sliceCtx = sliceCanvas.getContext("2d");
+            sliceCtx.drawImage(
+                canvas,
+                0, sourceY,
+                canvas.width, sourceSliceHeight,
+                0, 0,
+                canvas.width, sourceSliceHeight
+            );
+            
+            var sliceData = sliceCanvas.toDataURL("image/jpeg", 0.95);
+            pdf.addImage(sliceData, "JPEG", margin, margin, imgWidth, sliceHeight);
+            
+            sourceY += sourceSliceHeight;
+            remainingHeight -= sliceHeight;
+            isFirstPage = false;
         }
     }
     </script>
