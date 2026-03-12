@@ -358,16 +358,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
     <script>
-    try {
-        var chartData = JSON.parse('{{ chart_data_json | tojson | safe }}');
-    } catch(e) {
-        console.error("Chart data parse error:", e);
-        // Fallback: inject directly
-        var chartData = {{ chart_data_json | safe }};
-    }
+    var chartData = {{ chart_data_json | safe }};
     console.log("Chart data loaded:", chartData);
-    console.log("Radar values:", chartData.radar_chart ? chartData.radar_chart.values : "MISSING");
-    console.log("Bar values:", chartData.bar_chart ? chartData.bar_chart.values : "MISSING");
+    console.log("Radar values:", chartData.radar_chart ? chartData.radar_chart.data : "MISSING");
+    console.log("Bar values:", chartData.doughnut_chart ? chartData.doughnut_chart.data : "MISSING");
 
     function initCharts() {
         if (!chartData) {
@@ -378,9 +372,9 @@
         
         // Helper to safely get radar/bar values
         function safeGetValues(key) {
-            if (chartData[key] && Array.isArray(chartData[key].values)) {
-                console.log(`Extracting ${key} values:`, chartData[key].values);
-                return chartData[key].values;
+            if (chartData[key] && Array.isArray(chartData[key].data)) {
+                console.log(`Extracting ${key} data:`, chartData[key].data);
+                return chartData[key].data;
             }
             console.warn(`Chart data for ${key} is missing or invalid. Using zeros.`);
             return [0, 0, 0, 0, 0];
@@ -403,13 +397,7 @@
                     ],
                     datasets: [{
                         label: "Your Score",
-                        data: [
-                            radarValues[0] || 0,
-                            radarValues[1] || 0,
-                            radarValues[2] || 0,
-                            radarValues[3] || 0,
-                            radarValues[4] || 0
-                        ],
+                        data: chartData.radar_chart.data || [0, 0, 0, 0, 0],
                         backgroundColor: "rgba(99,102,241,0.25)",
                         borderColor: "#6366f1",
                         borderWidth: 2,
@@ -456,9 +444,10 @@
         if (timelineEl) {
             if (timelineEl._chartInstance) timelineEl._chartInstance.destroy();
             
-            var tc = chartData.timeline_chart || {};
+            var tc = chartData.line_chart || {};
             var timelineLabels = tc.labels || [];
-            var timelineValues = tc.confidence || [];
+            var timelineValues = tc.confidence || []; // Fallback for confidence line
+            var datasets = tc.datasets || [];
             
             // Generate fallback data if empty
             if (timelineLabels.length === 0) {
@@ -470,43 +459,14 @@
                 type: "line",
                 data: {
                     labels: timelineLabels,
-                    datasets: [
+                    datasets: datasets.length > 0 ? datasets : [
                         {
                             label: "Eye Contact",
-                            data: chartData.timeline_eye || timelineValues,
+                            data: [70, 75, 80, 75, 70],
                             borderColor: "#6366f1",
                             backgroundColor: "transparent",
                             borderWidth: 2,
-                            tension: 0.4,
-                            pointRadius: 3
-                        },
-                        {
-                            label: "Expression",
-                            data: chartData.timeline_emotion || timelineValues,
-                            borderColor: "#22c55e",
-                            backgroundColor: "transparent",
-                            borderWidth: 2,
-                            tension: 0.4,
-                            pointRadius: 3
-                        },
-                        {
-                            label: "Posture",
-                            data: chartData.timeline_posture || timelineValues,
-                            borderColor: "#f59e0b",
-                            backgroundColor: "transparent",
-                            borderWidth: 2,
-                            tension: 0.4,
-                            pointRadius: 3
-                        },
-                        {
-                            label: "Confidence",
-                            data: timelineValues,
-                            borderColor: "#ec4899",
-                            backgroundColor: "rgba(236,72,153,0.1)",
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 3
+                            tension: 0.4
                         }
                     ]
                 },
@@ -547,23 +507,10 @@
             if (emotionEl._chartInstance) emotionEl._chartInstance.destroy();
             
             // Get emotion distribution from Flask data
-            var emotionDist = chartData.emotion_distribution || {
-                "Confident & Friendly": 60,
-                "Calm & Composed": 25,
-                "Nervous": 10,
-                "Stressed": 3,
-                "Low Energy": 2
-            };
-            
-            var emotionLabels = Object.keys(emotionDist);
-            var emotionValues = Object.values(emotionDist);
-            var emotionColors = [
-                "#22c55e",
-                "#6366f1", 
-                "#f59e0b",
-                "#ef4444",
-                "#8b5cf6"
-            ];
+            var emotionPie = chartData.emotion_pie_chart || {};
+            var emotionLabels = emotionPie.labels || ["No Data"];
+            var emotionValues = emotionPie.data || [100];
+            var emotionColors = emotionPie.colors || ["#6366f1"];
             
             var emotionChart = new Chart(emotionEl, {
                 type: "doughnut",
@@ -610,7 +557,9 @@
         var barEl = document.getElementById("barChart");
         if (barEl) {
             if (barEl._chartInstance) barEl._chartInstance.destroy();
-            var barValues = safeGetValues("bar_chart");
+            var barData = chartData.doughnut_chart ? chartData.doughnut_chart.data : [0,0,0,0,0];
+            var barColors = chartData.doughnut_chart ? chartData.doughnut_chart.colors : ["#6366f1","#22c55e","#f59e0b","#ec4899","#ef4444"];
+            
             var barChart = new Chart(barEl, {
                 type: "bar",
                 data: {
@@ -623,20 +572,8 @@
                     ],
                     datasets: [{
                         label: "Your Score",
-                        data: [
-                            barValues[0] || 0,
-                            barValues[1] || 0,
-                            barValues[2] || 0,
-                            barValues[3] || 0,
-                            barValues[4] || 0
-                        ],
-                        backgroundColor: [
-                            "#6366f1",
-                            "#22c55e",
-                            "#f59e0b",
-                            "#ec4899",
-                            "#ef4444"
-                        ],
+                        data: barData,
+                        backgroundColor: barColors,
                         borderRadius: 8,
                         borderSkipped: false
                     }]

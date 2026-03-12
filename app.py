@@ -261,88 +261,15 @@ def report():
     
     report_data = analysis_store[session_id]
     
-    # PART 4 — Fix chart_data building
-    # Get scores safely with fallback to 0
-    eye_score = report_data.get("individual_scores", {}).get("eye_contact", 0)
-    emotion_score = report_data.get("individual_scores", {}).get("emotion", 0)
-    posture_score = report_data.get("individual_scores", {}).get("posture", 0)
-    speech_score = report_data.get("individual_scores", {}).get("speech_pace", 0)
-    filler_score = report_data.get("individual_scores", {}).get("filler_words", 0)
-
-    print(f"Scores for charts: eye={eye_score} emotion={emotion_score} posture={posture_score} speech={speech_score} filler={filler_score}")
-
-    # Get emotion distribution safely
-    emotion_summary = report_data.get("summaries", {}).get("emotion", {})
-    emotion_dist = emotion_summary.get("emotion_distribution", {})
-
-    if not emotion_dist:
-        # Build fallback from dominant emotion
-        dominant = emotion_summary.get("dominant_emotion_overall", "neutral")
-        emotion_dist = {dominant: 1}
-
-    total = sum(emotion_dist.values()) if emotion_dist else 1
-    label_map = {
-        "happy": "Confident & Friendly",
-        "neutral": "Calm & Composed",
-        "fear": "Nervous",
-        "sad": "Stressed",
-        "angry": "Low Energy",
-        "surprise": "Surprised",
-        "disgust": "Disengaged"
-    }
-
-    emotion_percentages = {}
-    for emotion, count in emotion_dist.items():
-        label = label_map.get(emotion, emotion.capitalize())
-        pct = round((count / total) * 100)
-        if pct > 0:
-            emotion_percentages[label] = pct
-
-    if not emotion_percentages:
-        emotion_percentages = {"Calm & Composed": 100}
-
-    # Timeline data
-    timeline_labels = report_data.get("timeline_labels", [])
-    timeline_confidence = report_data.get("timeline_confidence", [])
-    timeline_eye = report_data.get("timeline_eye", [])
-    timeline_emotion_data = report_data.get("timeline_emotion", [])
-    timeline_posture = report_data.get("timeline_posture", [])
-
-    # Generate fallback timeline if empty
-    if not timeline_labels:
-        timeline_labels = ["0:00", "0:15", "0:30", "0:45", "1:00"]
-        timeline_confidence = [eye_score, emotion_score, posture_score, 
-                              speech_score, filler_score]
-        timeline_eye = [eye_score] * 5
-        timeline_emotion_data = [emotion_score] * 5
-        timeline_posture = [posture_score] * 5
-
-    chart_data = {
-        "radar_chart": {
-            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
-            "values": [eye_score, emotion_score, posture_score, speech_score, filler_score]
-        },
-        "bar_chart": {
-            "labels": ["Eye Contact","Expression","Posture","Speech Pace","Filler Words"],
-            "values": [eye_score, emotion_score, posture_score, speech_score, filler_score]
-        },
-        "timeline_chart": {
-            "labels": timeline_labels,
-            "confidence": timeline_confidence
-        },
-        "emotion_distribution": emotion_percentages,
-        "timeline_eye": timeline_eye,
-        "timeline_emotion": timeline_emotion_data,
-        "timeline_posture": timeline_posture
-    }
+    # Use the unified helper to build chart data consistent with helpers.py
+    chart_data = prepare_chart_data(report_data)
     
     import json
     chart_data_json = json.dumps(chart_data)
     
-    # PART 1 — Debug print
+    # Debug print
     print("=== CHART DATA DEBUG ===")
-    print("individual_scores:", report_data.get("individual_scores"))
-    print("chart_data_json:", chart_data_json)
+    print("chart_data_json:", chart_data_json[:500] + "...")
     print("========================")
     
     return render_template(
@@ -353,13 +280,11 @@ def report():
         summary_text=report_data.get("summary_text", ""),
         overall_score=report_data["overall"]["score"],
         performance_label=report_data["overall"]["performance_label"],
-        performance_color=report_data["overall"]["performance_color"],
+        performance_color=report_data.get("overall", {}).get("performance_color", "#fff"),
         individual_scores=report_data["individual_scores"],
         recommendations=report_data["recommendations"],
-        filler_details=report_data["filler_word_details"],
-        transcription=report_data["transcription"],
-        generated_at=report_data["generated_at"],
-        interview_duration=report_data["interview_duration"]
+        filler_details=report_data.get("filler_word_details", {}),
+        transcription=report_data.get("transcription", "")
     )
 
 
