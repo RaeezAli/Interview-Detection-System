@@ -120,6 +120,12 @@ nav {
   gap: 0.8rem;
   align-items: center;
 }
+.menu-toggle {
+  display: none;
+  font-size: 1.5rem;
+  color: #fff;
+  cursor: pointer;
+}
 .btn-accent {
   background: var(--gradient) !important;
   color: #fff !important;
@@ -1016,6 +1022,33 @@ tr:last-child td {
 
 /* ─── Media Queries ──────────────────────────────────────── */
 @media (max-width: 900px) {
+  nav {
+    padding: 1rem 5%;
+  }
+  .menu-toggle {
+    display: block;
+  }
+  .nav-actions {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #111;
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    animation: fadeInDown 0.3s ease;
+  }
+  .nav-actions.active {
+    display: flex;
+  }
+  .nav-actions a {
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem;
+  }
   .grid-2,
   .grid-3,
   .grid-5 {
@@ -1023,6 +1056,10 @@ tr:last-child td {
   }
   .score-section {
     flex-direction: column;
+    text-align: center;
+  }
+  .score-info p {
+    max-width: 100%;
   }
   .live-container {
     grid-template-columns: 1fr;
@@ -1034,6 +1071,10 @@ tr:last-child td {
   .mode-cards {
     grid-template-columns: 1fr;
   }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 540px) {
   .grid-2,

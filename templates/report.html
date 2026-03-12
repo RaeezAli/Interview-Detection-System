@@ -36,23 +36,19 @@
   >
     <!-- NAV -->
     <nav>
-      <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
-      <div class="nav-actions">
-        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
-        <a href="{{ url_for('clear_session') }}"
-          ><i class="fas fa-plus"></i> New Interview</a
-        >
-        <a
-          href="#"
-          class="btn-accent"
-          onclick="
-            window.print();
-            return false;
-          "
-        >
-          <i class="fas fa-download"></i> Download PDF
-        </a>
-      </div>
+        <a href="{{ url_for('index') }}" class="logo">InterviewAI</a>
+        <div class="menu-toggle" id="menuToggle">
+          <i class="fas fa-bars"></i>
+        </div>
+        <div class="nav-actions" id="navActions">
+          <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+          <a href="{{ url_for('clear_session') }}">
+            <i class="fas fa-plus"></i> New Interview
+          </a>
+          <a href="#" class="btn-accent" onclick="window.print(); return false;">
+            <i class="fas fa-download"></i> Download PDF
+          </a>
+        </div>
     </nav>
 
     <div class="page">
@@ -370,6 +366,42 @@
         }
         console.log("InterviewAI: Initializing charts with data:", chartData);
         
+        // ── OVERALL SCORE DOUGHNUT ──────────────
+        var doughnutEl = document.getElementById("doughnutChart");
+        if (doughnutEl) {
+            if (doughnutEl._chartInstance) doughnutEl._chartInstance.destroy();
+            var score = parseInt(document.body.getAttribute("data-overall-score")) || 0;
+            var perfColor = document.body.getAttribute("data-perf-color") || "blue";
+            
+            // Map perf-color name to actual hex
+            var colorMap = { "green": "#10b981", "yellow": "#f59e0b", "red": "#ef4444", "blue": "#3b82f6" };
+            var themeColor = colorMap[perfColor] || "#3b82f6";
+
+            var doughnutChart = new Chart(doughnutEl, {
+                type: "doughnut",
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [themeColor, "rgba(255,255,255,0.05)"],
+                        borderWidth: 0,
+                        circumference: 360,
+                        rotation: 0
+                    }]
+                },
+                options: {
+                    cutout: "85%",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    }
+                }
+            });
+            doughnutEl._chartInstance = doughnutChart;
+            console.log("Overall score doughnut created");
+        }
+
         // Helper to safely get radar/bar values
         function safeGetValues(key) {
             if (chartData[key] && Array.isArray(chartData[key].data)) {
@@ -621,6 +653,21 @@
         document.addEventListener("DOMContentLoaded", initCharts);
     } else {
         initCharts();
+    }
+
+    // Mobile menu toggle
+    var menuToggle = document.getElementById("menuToggle");
+    var navActions = document.getElementById("navActions");
+    if (menuToggle && navActions) {
+        menuToggle.addEventListener("click", function() {
+            navActions.classList.toggle("active");
+            var icon = menuToggle.querySelector("i");
+            if (navActions.classList.contains("active")) {
+                icon.classList.replace("fa-bars", "fa-times");
+            } else {
+                icon.classList.replace("fa-times", "fa-bars");
+            }
+        });
     }
 
     // Toggle transcription function
