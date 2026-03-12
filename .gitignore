@@ -1,19 +1,35 @@
-# Python
+# Python Environment
+venv/
+env/
+ENV/
+bin/
+lib/
+share/
+include/
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
 .env
 
-# MediaPipe models
+# MediaPipe / AI models
 *.task
 
-# Uploads and temporary data
-uploads/*
-!uploads/.gitkeep
-
-# IDE and System Files
-.vscode/
-.idea/
+# Shared Libraries & System files
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/
+
+# Project Specific
+uploads/*
+!uploads/.gitkeep
+temp/
+*.log
+*.webm
+*.wav
+*.mp4
+
+# Distribution / Build
+dist/
+build/
+*.spec

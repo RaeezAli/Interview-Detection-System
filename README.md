@@ -1,84 +1,49 @@
----
+# InterviewAI - AI Powered Interview Detection System
 
-# 🎯 InterviewAI — AI Powered Interview Detection System
-
-> An intelligent interview analysis system that uses computer vision, speech recognition, and AI to help you improve your interview performance.
-
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![Flask](https://img.shields.io/badge/Flask-3.0-green)
-![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-orange)
-![Claude AI](https://img.shields.io/badge/Claude-AI-purple)
+> An AI-powered tool that analyzes interview performance in real time using computer vision and speech recognition. Get deep insights into your eye contact, facial expressions, posture, speech pace, and confidence score.
 
 ---
 
-## 🌟 Features
+## 🎯 Features
 
-| Feature                           | Description                                                         |
-| --------------------------------- | ------------------------------------------------------------------- |
-| 👁 **Eye Contact Detection**      | Real iris tracking using MediaPipe to measure camera engagement     |
-| 😊 **Facial Expression Analysis** | DeepFace emotion recognition mapped to interview context            |
-| 🧍 **Posture Detection**          | MediaPipe Pose to detect slouching, leaning, and head position      |
-| 🎙 **Speech Analysis**            | OpenAI Whisper transcription with WPM calculation                   |
-| 🔤 **Filler Word Detection**      | Detects uh, um, like, so and 15+ other filler words with timestamps |
-| 💪 **Confidence Scoring**         | Weighted scoring across all 5 categories                            |
-| 🤖 **AI Feedback**                | Claude AI generates personalized recommendations per session        |
-| 🎯 **Practice Mode**              | AI asks interview questions and evaluates your answers              |
-| 📊 **Detailed Report**            | Charts, graphs, transcription, and actionable recommendations       |
-
----
-
-## 🖥 Demo
-
-### Upload Video Mode
-Upload any recorded interview video and get a full analysis report.
-
-### Live Interview Mode
-Use your webcam to record a live interview session and get analyzed after.
-
-### Practice Mode
-Answer AI-generated interview questions and receive instant feedback.
+| Category                  | What We Detect                                            |
+| ------------------------- | --------------------------------------------------------- |
+| 👁 **Eye Contact**        | Gaze direction, iris tracking, eye contact percentage     |
+| 😊 **Facial Expressions** | Emotion classification mapped to interview labels         |
+| 🧍 **Posture**            | Slouching, leaning, shoulder alignment, head position     |
+| 🎙 **Speech Pace**        | Words per minute, long pauses, pace classification        |
+| 🔤 **Filler Words**       | Detection of 20+ common interview fillers with timestamps |
+| 📊 **Confidence Score**   | Weighted aggregate score with performance labels          |
 
 ---
 
 ## 🛠 Tech Stack
 
-**Backend:**
-- Python 3.11
-- Flask + Flask-SocketIO
-- OpenCV
-- MediaPipe (Face Mesh + Pose)
-- DeepFace
-- OpenAI Whisper
-- Anthropic Claude API
-
-**Frontend:**
-- HTML5 + CSS3 + JavaScript
-- Chart.js
-- Socket.IO
-- Font Awesome
+- **Backend**: Python, Flask, Flask-SocketIO, Eventlet
+- **Computer Vision**: OpenCV, MediaPipe (Face Mesh + Pose)
+- **Emotion Detection**: DeepFace / FER
+- **Speech AI**: OpenAI Whisper
+- **Frontend**: HTML5, CSS3, JavaScript, Chart.js, Socket.IO client
+- **Audio Extraction**: FFmpeg
 
 ---
 
-## ⚡ Installation
+## 🚀 Installation
 
-### Prerequisites
-
-- Python 3.11
-- FFmpeg installed and added to PATH or configured in .env
-- Anthropic API key from https://console.anthropic.com
-
-### Step 1 — Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/interview-detector.git
-cd interview-detector
+git clone https://github.com/RaeezAli/Interview-Detection-System.git
+cd Interview-Detection-System
 ```
 
-### Step 2 — Create virtual environment
+### 2. Create a Virtual Environment
 
 ```bash
 python -m venv venv
 ```
+
+### 3. Activate the Virtual Environment
 
 **Windows:**
 
@@ -86,26 +51,107 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-**Mac/Linux:**
+**macOS/Linux:**
 
 ```bash
 source venv/bin/activate
 ```
 
-### Step 3 — Install dependencies
+### 4. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 4 — Configure environment variables
+### 5. Install FFmpeg
 
-```bash
-cp .env.example .env
-```
+FFmpeg is required for audio extraction from video files.
 
-### Step 5 — Run the application
+- **Download**: [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
+- After installation, ensure `ffmpeg` is on your system PATH.
+
+### 6. Run the Application
 
 ```bash
 python app.py
 ```
+
+## 📖 Usage
+
+### 🎥 Live Interview Mode
+
+1. Click **Live Interview** on the home page.
+2. Allow browser access to your webcam.
+3. Click **Start Interview** — the AI begins analyzing you in real time.
+4. When done, click **End Interview**.
+5. The system generates your full report automatically.
+
+### 📁 Upload Video Mode
+
+1. Click **Upload Video** on the home page.
+2. Drag and drop (or browse) your recorded interview video.
+3. Click **Analyze Video**.
+4. Wait on the loading page — progress is shown in real time via Socket.IO.
+5. Your full report opens automatically when analysis is complete.
+
+---
+
+## 📁 Project Structure
+
+```
+Interview-Detection-System/
+├── app.py                    # Main Flask application
+├── config.py                 # Configuration class (reads .env)
+├── .env                      # Environment variables
+├── requirements.txt          # Python dependencies
+├── .gitignore                # Git ignored files
+├── README.md                 # Project documentation
+├── face_landmarker.task      # MediaPipe model file
+│
+├── detectors/                # AI Detection Modules
+│   ├── gaze.py               # Eye contact & iris tracking (MediaPipe)
+│   ├── emotion.py            # Facial expression analysis
+│   ├── posture.py            # Body language analysis (MediaPipe Pose)
+│   ├── speech.py             # Transcription & pace (Whisper)
+│   └── confidence_score.py   # Weighted score + report generator
+│
+├── utils/                    # Utility functions
+│   └── helpers.py            # Shared utilities (video, file, chart, color)
+│
+├── templates/                # HTML Templates (Refactored)
+│   ├── index.html            # Landing page
+│   ├── LiveVideo.html        # Live webcam interview
+│   ├── RecordedVideo.html    # Video upload page
+│   ├── loading.html          # Analysis progress page
+│   └── report.html           # Final analytics dashboard
+│
+├── static/                   # Static Assets
+│   ├── css/                  # Extracted Stylesheets
+│   │   ├── style.css         # Main shared styles
+│   │   ├── live.css          # Live interview styles
+│   │   ├── upload.css        # Recorded video styles
+│   │   ├── loading.css       # Loading page styles
+│   │   └── report.css        # Report dashboard styles
+│   ├── js/                   # Extracted Scripts
+│   │   ├── live.js           # Live interview logic
+│   │   ├── upload.js         # Recorded video logic
+│   │   ├── loading.js        # Loading page logic
+│   │   └── report.js         # Report dashboard logic
+│   └── assets/               # Images and icons
+│
+└── uploads/                  # Temporary video/audio files
+```
+
+---
+
+## ⚡ Performance Notes
+
+- **GPU Acceleration**: MediaPipe and FER benefit from a CUDA-enabled GPU.
+- **Whisper Model**: The `base` model is used by default. Adjust in code if needed for higher accuracy.
+- **Refactored Assets**: All inline CSS and JS have been moved to the `static/` directory to improve maintainability and page load speeds.
+
+---
+
+## 🛡 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
