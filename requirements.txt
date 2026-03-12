@@ -1,12 +1,11 @@
 flask
 flask-socketio
-opencv-python
+opencv-python-headless
 mediapipe==0.10.32
 deepface
 fer==22.5.1
 openai-whisper
 SpeechRecognition
-pyaudio
 numpy==1.26.4
 pandas
 matplotlib
@@ -14,3 +13,4 @@ gevent
 gevent-websocket
 python-dotenv
 setuptools
+gunicorn
