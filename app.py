@@ -221,24 +221,67 @@ def loading():
 @app.route("/report")
 def report():
     session_id = session.get("session_id")
-    if not session_id:
+    if not session_id or session_id not in analysis_store:
         return redirect(url_for("index"))
-
-    report_data = analysis_store.get(session_id)
-    if not report_data:
-        return redirect(url_for("index"))
-
-    # Pre-serialize chart data for reliable Chart.js ingestion
+    
+    report_data = analysis_store[session_id]
+    
+    # Safely build chart data with fallback defaults
+    individual_scores = report_data.get("individual_scores", {})
+    
+    chart_data = {
+        "radar_chart": {
+            "labels": [
+                "Eye Contact",
+                "Expression", 
+                "Posture",
+                "Speech Pace",
+                "Filler Words"
+            ],
+            "values": [
+                individual_scores.get("eye_contact", 0),
+                individual_scores.get("emotion", 0),
+                individual_scores.get("posture", 0),
+                individual_scores.get("speech_pace", 0),
+                individual_scores.get("filler_words", 0)
+            ]
+        },
+        "bar_chart": {
+            "labels": [
+                "Eye Contact",
+                "Expression",
+                "Posture", 
+                "Speech Pace",
+                "Filler Words"
+            ],
+            "values": [
+                individual_scores.get("eye_contact", 0),
+                individual_scores.get("emotion", 0),
+                individual_scores.get("posture", 0),
+                individual_scores.get("speech_pace", 0),
+                individual_scores.get("filler_words", 0)
+            ],
+            "colors": [
+                "#6366f1",
+                "#8b5cf6",
+                "#06b6d4",
+                "#10b981",
+                "#f59e0b"
+            ]
+        },
+        "timeline_chart": {
+            "labels": report_data.get("timeline_labels", []),
+            "confidence": report_data.get("timeline_confidence", [])
+        }
+    }
+    
     import json
-    chart_data_json = json.dumps(report_data.get("chart_data", {}))
-
-    print("Chart data keys:", report_data.get('chart_data', {}).keys())
-    print("Radar data:", report_data.get('chart_data', {}).get('radar_chart'))
-
+    chart_data_json = json.dumps(chart_data)
+    
     return render_template(
         "report.html",
         report=report_data,
-        chart_data=report_data.get("chart_data", {}),
+        chart_data=chart_data,
         chart_data_json=chart_data_json,
         summary_text=report_data.get("summary_text", ""),
         overall_score=report_data["overall"]["score"],

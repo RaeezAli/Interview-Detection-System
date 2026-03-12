@@ -10,6 +10,7 @@
     var stream;
     var timerInterval;
     var seconds = 0;
+    var shownNotifications = [];
 
     // Start Interview Button
     document.getElementById("start-btn").addEventListener("click", async function() {
@@ -25,6 +26,9 @@
                 }
             });
             
+            // Start microphone level monitor
+            startMicLevelMonitor(stream);
+            
             // Show video feed
             var videoEl = document.getElementById("webcam");
             videoEl.srcObject = stream;
@@ -35,6 +39,7 @@
             
             // Start recording using MediaRecorder - explicitly prefer high-quality audio
             recordedChunks = [];
+            shownNotifications = []; // Reset notifications
             
             var options;
             if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
@@ -68,7 +73,10 @@
             // Start timer
             seconds = 0;
             updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
+            timerInterval = setInterval(function() {
+                updateTimer();
+                checkScheduledNotifications();
+            }, 1000);
             
             // Start lightweight client-side indicators
             startClientSideIndicators();
@@ -77,11 +85,16 @@
             document.getElementById("start-btn").disabled = true;
             document.getElementById("start-btn").style.opacity = "0.5";
             document.getElementById("end-btn").disabled = false;
+            if (document.getElementById("micStatus")) {
+                document.getElementById("micStatus").textContent = "Active";
+                document.getElementById("micStatus").style.color = "#22c55e";
+            }
             
             // Emit session start to Flask
             socket.emit("start_live_analysis");
             
         } catch(err) {
+            console.error("Camera/Mic access error:", err);
             alert("Camera access denied or not available: " + err.message);
         }
     });
@@ -107,6 +120,10 @@
         // Update UI
         document.getElementById("end-btn").disabled = true;
         document.getElementById("start-btn").disabled = true;
+        if (document.getElementById("micStatus")) {
+            document.getElementById("micStatus").textContent = "Stopped";
+            document.getElementById("micStatus").style.color = "#aaa";
+        }
     });
 
     // Upload recorded video to Flask
@@ -160,6 +177,114 @@
         document.getElementById("timer").textContent = `${h}:${m}:${s}`;
     }
 
+    // ── NOTIFICATION SYSTEM ──────────────────────────
+    function showNotification(message, type, duration) {
+        type = type || "info";
+        duration = duration || 4000;
+        
+        var container = document.getElementById("notificationToast");
+        if (!container) return;
+        
+        var toast = document.createElement("div");
+        toast.className = "toast-notification " + type;
+        
+        var icons = {
+            "info": "💡",
+            "warning": "⚠️",
+            "success": "✅",
+            "tip": "🎯"
+        };
+        
+        toast.innerHTML = 
+            '<span class="toast-icon">' + (icons[type] || "💡") + '</span>' +
+            '<span class="toast-text">' + message + '</span>';
+        
+        container.style.display = "flex";
+        container.appendChild(toast);
+        
+        // Auto remove after duration
+        setTimeout(function() {
+            toast.style.animation = "fadeOut 0.3s ease forwards";
+            setTimeout(function() {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+                if (container.children.length === 0) {
+                    container.style.display = "none";
+                }
+            }, 300);
+        }, duration);
+    }
+
+    // ── SCHEDULED NOTIFICATIONS DURING RECORDING ────
+    var notificationSchedule = [
+        { time: 5,  message: "Interview started! Speak clearly and look at the camera.", type: "success" },
+        { time: 15, message: "Tip: Maintain eye contact with the camera lens for a confident look.", type: "tip" },
+        { time: 30, message: "Reminder: Sit up straight and keep your shoulders relaxed.", type: "tip" },
+        { time: 45, message: "Speak at a steady pace — aim for 110 to 160 words per minute.", type: "info" },
+        { time: 60, message: "Avoid filler words like uh, um, and like. Pause instead.", type: "warning" },
+        { time: 90, message: "Great job! Keep your expression natural and engaged.", type: "success" },
+        { time: 120, message: "Reminder: Look at the camera, not at yourself on screen.", type: "tip" },
+        { time: 150, message: "You are doing well! Stay confident and keep speaking clearly.", type: "success" },
+        { time: 180, message: "Take a breath before answering — pauses are a sign of confidence.", type: "tip" },
+        { time: 240, message: "Almost there! Maintain your posture and eye contact.", type: "info" },
+        { time: 300, message: "5 minutes in — excellent endurance! Keep the energy up.", type: "success" }
+    ];
+
+    function checkScheduledNotifications() {
+        if (!notificationSchedule) return;
+        
+        notificationSchedule.forEach(function(notif) {
+            if (seconds >= notif.time && shownNotifications.indexOf(notif.time) === -1) {
+                showNotification(notif.message, notif.type, 5000);
+                shownNotifications.push(notif.time);
+            }
+        });
+    }
+
+    // ── MICROPHONE LEVEL INDICATOR ───────────────────
+    function startMicLevelMonitor(stream) {
+        try {
+            var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            var analyser = audioContext.createAnalyser();
+            var microphone = audioContext.createMediaStreamSource(stream);
+            microphone.connect(analyser);
+            analyser.fftSize = 256;
+            
+            var dataArray = new Uint8Array(analyser.frequencyBinCount);
+            var micBar = document.getElementById("micLevel");
+            
+            function updateMicLevel() {
+                analyser.getByteFrequencyData(dataArray);
+                var average = dataArray.reduce(function(a, b) { 
+                    return a + b; 
+                }, 0) / dataArray.length;
+                
+                var level = Math.min(100, average * 3); // Multiplier for sensitivity
+                
+                if (micBar) micBar.style.width = level + "%";
+                
+                // Warn if mic seems silent after 10 seconds of interview
+                if (seconds > 10 && level < 2) {
+                    if (shownNotifications.indexOf("mic_warning") === -1) {
+                        showNotification(
+                            "Your microphone seems silent. Check mic permissions in browser settings.",
+                            "warning",
+                            8000
+                        );
+                        shownNotifications.push("mic_warning");
+                    }
+                }
+                
+                if (stream.active) {
+                    requestAnimationFrame(updateMicLevel);
+                }
+            }
+            
+            updateMicLevel();
+        } catch(e) {
+            console.log("Mic monitor error:", e);
+        }
+    }
+
     // Lightweight client-side only indicators
     function startClientSideIndicators() {
         var eyeLabels = ["Looking at Camera", "Looking at Camera", "Looking at Camera", "Looking Left", "Looking Right"];
@@ -197,7 +322,6 @@
             if (exprEl) exprEl.textContent = exprLabels[Math.floor(Math.random() * exprLabels.length)];
             if (postEl) postEl.textContent = postLabels[Math.floor(Math.random() * postLabels.length)];
             
-            // Smoothly animate confidence score between 70-95
             confidence += (Math.random() - 0.5) * 5;
             confidence = Math.max(70, Math.min(95, confidence));
             var confRounded = Math.round(confidence);
