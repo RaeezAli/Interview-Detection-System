@@ -180,12 +180,27 @@ def process_video_file(video_path: str, session_id: str):
             socketio.emit("analysis_error", {"error": f"Report validation failed: {err}"})
             return
 
-        # Store in analysis_store with explicit structure
+        # PART 2 — Fix how individual_scores are stored
+        from datetime import datetime
         analysis_store[session_id] = {
             "session_id": session_id,
-            "overall": report["overall"],
-            "individual_scores": report["individual_scores"],
-            "summaries": report["summaries"],
+            "overall": {
+                "score": report["overall"]["score"],
+                "performance_label": report["overall"]["performance_label"]
+            },
+            "individual_scores": {
+                "eye_contact": report["individual_scores"]["eye_contact"],
+                "emotion": report["individual_scores"]["emotion"],
+                "posture": report["individual_scores"]["posture"],
+                "speech_pace": report["individual_scores"]["speech_pace"],
+                "filler_words": report["individual_scores"]["filler_words"]
+            },
+            "summaries": {
+                "gaze": gaze_summary,
+                "emotion": emotion_summary,
+                "posture": posture_summary,
+                "speech": speech_analysis
+            },
             "timeline_labels": report["timeline_data"]["labels"],
             "timeline_confidence": report["timeline_data"]["confidence_data"],
             "timeline_eye": report["timeline_data"]["eye_contact_data"],
@@ -195,6 +210,8 @@ def process_video_file(video_path: str, session_id: str):
             "transcription": report["transcription"],
             "filler_word_details": report["filler_word_details"],
             "chart_data": report["chart_data"],
+            "timestamp": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
+            "duration": duration_str,
             "generated_at": report["generated_at"],
             "interview_duration": report["interview_duration"],
             "summary_text": report["summary_text"]

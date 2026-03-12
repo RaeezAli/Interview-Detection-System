@@ -333,23 +333,23 @@ def generate_full_report(
     duration_str = f"{dur_secs // 60:02}:{dur_secs % 60:02}"
 
     return {
-        "report_id": report_id,
-        "generated_at": generated_at,
-        "interview_duration": duration_str,
         "overall": {
             "score": round(overall_score, 2),
             "performance_label": score_data["performance_label"],
             "performance_color": score_data["performance_color"],
         },
         "individual_scores": score_data["individual_scores"],
+        "recommendations": recommendations,
+        "timeline_data": timeline_data,
         "summaries": {
             "gaze": gaze_summary,
             "emotion": emotion_summary,
             "posture": posture_summary,
             "speech": speech_analysis,
         },
-        "recommendations": recommendations,
-        "timeline_data": timeline_data,
         "filler_word_details": speech_analysis.get("filler_analysis", {}),
         "transcription": speech_analysis.get("transcription", ""),
+        "report_id": report_id,
+        "generated_at": generated_at,
+        "interview_duration": duration_str,
     }
